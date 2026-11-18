@@ -1332,3 +1332,11 @@ Reading: 24 epochs does not move gates on the never-seen place; lane/ADE/BDD con
 Update 97 — bigQ_h start (16 epochs, seed 3; tmux q16, ~/bigQ_h.log).
 
 Update 98 — MISTAKE, corrected: tag bigQ_h already existed (Update 78: 3-level gate head). My seed-3 launch reused the tag, so (1) the chain skipped training (final.pt present, runs/bigQ_h untouched, weights intact), (2) data/mix/bigQ_h.yaml was overwritten with the new config and (3) the old evaluation log ~/bigQ_h.log was overwritten by the failed eval. Fixes: yaml regenerated from runs/bigQ_h/hybrid/provenance.jsonl (the overwriting copy kept at ~/bigQ_h_overwritten_by_seed3_attempt.yaml); the Update 78 numbers in this log remain the record of that run, its raw log is lost. Rule: check `ls runs/<tag>` before starting a chain. The seed-3, 16-epoch run is relaunched as bigS3_h.
+
+## Update 99 — DroneRacing GateNet g17 vs our v3/v4 on the never-seen real place (offline detector comparison, NOT flight success)
+
+User asked to swap our detector into https://github.com/GulogluHaktan/DroneRacing and estimate the real-flight difference. Weights were pushed (policy soup85, estimator e4, calib, GateNet g17). Real-flight success cannot be measured (that project has no hardware flights; README: "hardware tests are still open"). The Isaac closed-loop swap needs Isaac Lab (docker image lunarsim-isaaclab:6.0.1, not on this machine) — not run.
+Offline: `scripts/eval_dr_gatenet_real.py` (g17 on red, 196 frames/312 gates, input 256x192 full frame, same matching as eval_real_golden.py, scale 256x192). g17 is trained on simulator data only.
+- g17 within 20 px: 0.776 at its default threshold 0.3 (0.558 at 0.5, 0.830 at 0.2 with 0.64 unmatched detections/frame); within 10 px 0.756; full gates 0.853, partial gates 0.147 (n=34); median corner error 2.0 px where it detects (corner definition agrees with our labels).
+- Ours (release v3 / v4): 0.990 / 0.987 within 20 px, 0.942 / 0.958 within 10 px, unmatched 0.0/frame.
+Caveats: g17 is normally run with adaptive crop around the EKF-predicted gate and the map-based EKF fusing frames, which this per-frame test does not include; our numbers are per-frame too. This is a detector comparison on one never-seen real place, not a flight success rate.
