@@ -1,0 +1,42 @@
+"""+ DIODE general depth frames (600) in the mix; same split A as mrgA. Original: Leave-one-place-out with MonoRaceGate in the mix. N=3000, 16 epochs, vit. Split A: train on ADNEC+DHL+marina, test on red; split B: train on red+DHL+marina, test on ADNEC.
+Mix = TII partial positives (450) + TII negatives (150) + all MonoRaceGate positives/negative crops of the training places + sim for the rest. Baseline (no MonoRaceGate): neg_r300 (red 0.420, ADNEC 0.411 within 20 px). Summary runs/mrg_summary.md"""
+import json, os, random, subprocess, sys
+from pathlib import Path
+import yaml
+M = Path("data/mix"); N = 3000; PY = ".venv/bin/python"
+def sh(cmd, env=None):
+    print(">>", cmd, flush=True)
+    if subprocess.run(cmd, shell=True, env={**os.environ, **(env or {})}).returncode: print("FAILED", cmd, flush=True); sys.exit(1)
+def link(src, dst):
+    dst.parent.mkdir(parents=True, exist_ok=True)
+    if not dst.exists() and not dst.is_symlink(): os.symlink(Path(src).resolve(), dst)
+base = yaml.safe_load(open("configs/sim_v2_5090.yaml")); sim_root = Path("data/train_sim"); sim_pick = random.Random(0).sample(sorted((sim_root / "images").rglob("*.png")), N)
+if len(list((M / "cache/dino").glob("diode__*.pt"))) < 2700:
+    yaml.safe_dump(dict(base, images="data/general/train/images", cache=str(M / "cache"), labels="data/general/train/labels"), open(M / "cache_diode.yaml", "w")); sh(f"{PY} scripts/cache_teachers.py {M}/cache_diode.yaml")
+for f in Path("data/general/train/labels/depth").glob("*.npy"): link(f, M / "labels/depth" / f.name)
+dio = sorted(Path("data/general/train/images/diode").glob("*.jpg")); random.Random(7).shuffle(dio)
+if len(list((M / "cache/dino").glob("real_mrg*__*.pt"))) < 500:
+    yaml.safe_dump(dict(base, images="data/train_mrg/images", cache=str(M / "cache"), labels="data/train_mrg/labels"), open(M / "cache_mrg.yaml", "w")); sh(f"{PY} scripts/cache_teachers.py {M}/cache_mrg.yaml")
+lab = M / "labels"
+for f in Path("data/train_mrg/labels/corners_full").glob("*.json"): link(f, lab / "corners_full" / f.name)
+tii = sorted(Path("data/train_real_p/images/real_tii_p").glob("*.jpg")); random.Random(0).shuffle(tii); tneg = sorted(Path("data/train_real/images/real_tii_neg").glob("*.jpg")); random.Random(5).shuffle(tneg)
+mrg = sorted(Path("data/train_mrg/images/real_mrg").glob("*.jpg")); mneg = sorted(Path("data/train_mrg/images/real_mrg_neg").glob("*.jpg"))
+res = []
+for tag, train_pl, test_seq in (("mrgA_d2", ("adnec", "dhl", "marina"), "red_s1_f1,red_s1_f2,red_s1_f3"),):
+    mp = [p for p in mrg if p.stem.split("_")[0] in train_pl]; mn = [p for p in mneg if p.stem.split("_")[0] in train_pl]; nsim = 2119
+    img = M / tag / "images"; sh(f"rm -rf {img}")
+    for p in sim_pick[:nsim]: link(p, img / p.relative_to(sim_root / "images"))
+    for p in tii[:450]: link(p, img / "real_tii_p" / p.name)
+    for p in tneg[:150]: link(p, img / "real_tii_neg" / p.name)
+    for p in mp: link(p, img / "real_mrg" / p.name)
+    for p in mn: link(p, img / "real_mrg_neg" / p.name)
+    for p in dio[:600]: link(p, img / "diode" / p.name)
+    print(tag, "mrg pos", len(mp), "mrg neg", len(mn), "sim", nsim, flush=True)
+    cp = M / f"{tag}.yaml"; yaml.safe_dump(dict(base, images=str(img), labels=str(lab), cache=str(M / "cache"), out_dir=f"runs/{tag}", epochs=16, student="vit"), open(cp, "w"))
+    if not Path(f"runs/{tag}/vit/final.pt").exists(): sh(f"{PY} scripts/train.py {cp}")
+    sh(f"GOLDEN=data/real_mrg/golden FLIGHTS={test_seq} KINDS=vit CKPT=runs/{tag} {PY} scripts/eval_real_golden.py")
+    sh(f"KINDS=vit CKPT=runs/{tag} {PY} scripts/eval_real_golden.py")
+    sh(f"KINDS=vit EVAL_ROOT=data/heldout CKPT=runs/{tag} TAG={tag} {PY} scripts/eval_slots_sim.py sim_racec")
+    sh(f"CKPT=runs/{tag} KIND=vit {PY} scripts/eval_depth_diode.py")
+    res.append((tag, test_seq))
+print("CHAIN DONE", flush=True)

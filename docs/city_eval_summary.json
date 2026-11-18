@@ -1,0 +1,302 @@
+{
+ "all": {
+  "classes": {
+   "gate": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "tree_pole": {
+    "recall": 0.913,
+    "precision": 0.6,
+    "iou": 0.567,
+    "true_px": 2014780
+   },
+   "person": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "ground_road": {
+    "recall": 0.555,
+    "precision": 0.803,
+    "iou": 0.489,
+    "true_px": 16438624
+   },
+   "building": {
+    "recall": 0.175,
+    "precision": 0.877,
+    "iou": 0.171,
+    "true_px": 6063204
+   },
+   "opponent_drone": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "car": {
+    "recall": 0.022,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 39876
+   },
+   "rock": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "lane_marking": {
+    "recall": 0.319,
+    "precision": 0.014,
+    "iou": 0.014,
+    "true_px": 72896
+   }
+  },
+  "unlabelled_frac": 0.121,
+  "images": 120
+ },
+ "clear": {
+  "classes": {
+   "gate": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "tree_pole": {
+    "recall": 0.955,
+    "precision": 0.733,
+    "iou": 0.708,
+    "true_px": 503695
+   },
+   "person": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "ground_road": {
+    "recall": 0.625,
+    "precision": 0.833,
+    "iou": 0.555,
+    "true_px": 4109656
+   },
+   "building": {
+    "recall": 0.317,
+    "precision": 0.979,
+    "iou": 0.315,
+    "true_px": 1515801
+   },
+   "opponent_drone": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "car": {
+    "recall": 0.026,
+    "precision": 0.001,
+    "iou": 0.001,
+    "true_px": 9969
+   },
+   "rock": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "lane_marking": {
+    "recall": 0.279,
+    "precision": 0.011,
+    "iou": 0.01,
+    "true_px": 18224
+   }
+  },
+  "unlabelled_frac": 0.136,
+  "images": 30
+ },
+ "fog": {
+  "classes": {
+   "gate": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "tree_pole": {
+    "recall": 0.923,
+    "precision": 0.711,
+    "iou": 0.672,
+    "true_px": 503695
+   },
+   "person": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "ground_road": {
+    "recall": 0.522,
+    "precision": 0.769,
+    "iou": 0.451,
+    "true_px": 4109656
+   },
+   "building": {
+    "recall": 0.169,
+    "precision": 0.806,
+    "iou": 0.162,
+    "true_px": 1515801
+   },
+   "opponent_drone": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "car": {
+    "recall": 0.007,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 9969
+   },
+   "rock": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "lane_marking": {
+    "recall": 0.358,
+    "precision": 0.009,
+    "iou": 0.009,
+    "true_px": 18224
+   }
+  },
+  "unlabelled_frac": 0.154,
+  "images": 30
+ },
+ "rain": {
+  "classes": {
+   "gate": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "tree_pole": {
+    "recall": 0.926,
+    "precision": 0.713,
+    "iou": 0.674,
+    "true_px": 503695
+   },
+   "person": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "ground_road": {
+    "recall": 0.468,
+    "precision": 0.747,
+    "iou": 0.404,
+    "true_px": 4109656
+   },
+   "building": {
+    "recall": 0.131,
+    "precision": 0.967,
+    "iou": 0.13,
+    "true_px": 1515801
+   },
+   "opponent_drone": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "car": {
+    "recall": 0.0,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 9969
+   },
+   "rock": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "lane_marking": {
+    "recall": 0.262,
+    "precision": 0.011,
+    "iou": 0.011,
+    "true_px": 18224
+   }
+  },
+  "unlabelled_frac": 0.156,
+  "images": 30
+ },
+ "lowlight": {
+  "classes": {
+   "gate": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "tree_pole": {
+    "recall": 0.846,
+    "precision": 0.387,
+    "iou": 0.362,
+    "true_px": 503695
+   },
+   "person": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "ground_road": {
+    "recall": 0.605,
+    "precision": 0.854,
+    "iou": 0.548,
+    "true_px": 4109656
+   },
+   "building": {
+    "recall": 0.083,
+    "precision": 0.645,
+    "iou": 0.079,
+    "true_px": 1515801
+   },
+   "opponent_drone": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "car": {
+    "recall": 0.054,
+    "precision": 0.001,
+    "iou": 0.001,
+    "true_px": 9969
+   },
+   "rock": {
+    "recall": null,
+    "precision": 0.0,
+    "iou": 0.0,
+    "true_px": 0
+   },
+   "lane_marking": {
+    "recall": 0.375,
+    "precision": 0.211,
+    "iou": 0.156,
+    "true_px": 18224
+   }
+  },
+  "unlabelled_frac": 0.039,
+  "images": 30
+ }
+}

@@ -1,0 +1,1 @@
+- PDF 4th edition: docs/report/PerceptionModel_rapor_v4.pdf (adds 2c: Updates 83–90 negatives); script make_report_v4_tr.py

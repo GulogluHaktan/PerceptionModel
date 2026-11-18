@@ -1,0 +1,5 @@
+- [Work order: indoor, outdoor, racing](project-work-order-indoor-outdoor-racing.md) — user plan, 30 m/s gates, swap into DroneRacing perception
+- [LLM declarative layouts](project-llm-declarative-layouts.md) — LLM picks ids and coordinates, no code; resolver validates
+- [Catalogue growth + native Isaac](project-catalogue-growth-and-native-isaac.md) — VLM->SAM2->Hunyuan->gate loop, 5090 day1 script, what is untested
+- [Real golden set (TII)](project-real-golden-set-tii.md) — 102 real frames, sim students detect 0 gates; sim numbers are sim-to-sim only
+- [General real data mix](project-general-real-data-mix.md) — TII/MonoRaceGate/DIODE/SUN/ADE sources, bigA numbers, red held out

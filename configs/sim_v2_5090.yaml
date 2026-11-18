@@ -1,0 +1,25 @@
+# Training on the simulated sets (indoor + outdoor + racing) after `bash scripts/day1_5090.sh sets`: data/train_sim/{images,labels}. Exact depth (depth_gt) + seg + corner heatmaps + the slot head for partly visible gates (labels/corners_full).
+# Teacher cache first: .venv/bin/python scripts/cache_teachers.py configs/sim_5090.yaml ; then scripts/train.py configs/sim_5090.yaml. No golden set here (sim only): judge on the racing downstream test, not on these labels.
+student: vit
+hybrid_name: fastvit_sa24
+images: data/train_sim/images
+labels: data/train_sim/labels
+cache: data/train_sim/cache
+out_dir: runs/sim_v2
+size: 448
+teachers:
+  - {name: dino, kind: dinov2, weight: 1.0}
+  - {name: depth, kind: depth_da2}
+batch: 32
+epochs: 8
+lr: 2.0e-4
+workers: 8
+pretrained: true
+depth_weight: 0.5        # teacher relative depth; the exact sim depth below is the stronger signal
+depth_gt_weight: 1.0
+seg_weight: 1.0
+corner_weight: 5.0
+slot_weight: 1.0
+gate:
+  floors: {seg_miou: 0.0, depth_absrel_max: 1.0}
+  max_regress: 1.0

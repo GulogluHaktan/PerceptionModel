@@ -1,0 +1,444 @@
+{
+ "date": "16 Kasım 2026",
+ "journey": [
+  [
+   "Yalnızca simülasyon (sim_v4)",
+   0.0,
+   0.0
+  ],
+  [
+   "+ tek salondan gerçek kareler (TII)",
+   0.42,
+   0.03
+  ],
+  [
+   "+ başka yerlerden gerçek kapılar (MonoRaceGate)",
+   0.51,
+   0.14
+  ],
+  [
+   "+ genel gerçek veri, büyük tarif (bigA/bigB)",
+   0.48,
+   0.1
+  ],
+  [
+   "+ yoğun kapı başlığı, veri artırma, negatifler (bigC)",
+   0.94,
+   0.86
+  ],
+  [
+   "+ ince ızgara (stride 4), Aeroscapes (bigD)",
+   0.98,
+   0.92
+  ],
+  [
+   "+ gerçek yol verisi, etiket ve derinlik düzeltmeleri (bigE)",
+   0.99,
+   0.92
+  ],
+  [
+   "+ gerçek şerit kareleri ve iki yeni ortam (bigF / bigG)",
+   0.98,
+   0.89
+  ]
+ ],
+ "models": [
+  "bigB",
+  "bigC",
+  "bigD",
+  "bigE",
+  "bigF",
+  "bigG (yeni)"
+ ],
+ "rows": [
+  [
+   "Gerçek kapı, hiç görülmemiş yer (red): 20 px içinde",
+   "0.48",
+   "0.94",
+   "0.98 (2. tohum 0.96)",
+   "0.99",
+   "0.96",
+   "0.98"
+  ],
+  [
+   "Gerçek kapı, hiç görülmemiş yer (red): 10 px içinde",
+   "0.10",
+   "0.86",
+   "0.92 (2. tohum 0.86)",
+   "0.92",
+   "0.87",
+   "0.89"
+  ],
+  [
+   "Aynı testte ortanca köşe hatası (px)",
+   "21.3",
+   "5.7",
+   "3.6",
+   "3.5",
+   "3.6",
+   "4.0"
+  ],
+  [
+   "Aynı testte kare başına fazladan (yanlış) tahmin",
+   "0.49",
+   "0.02",
+   "0.01",
+   "0.03",
+   "0.00",
+   "0.02"
+  ],
+  [
+   "Kısmen görünen gerçek kapı, 20 px içinde (34 kapı)",
+   "0.00",
+   "0.74",
+   "0.88 (2. tohum 0.94)",
+   "0.97",
+   "0.94",
+   "0.97"
+  ],
+  [
+   "Kapısız gerçek görüntüde yanlış kapı alarmı",
+   "—",
+   "0.00–0.01",
+   "0.00",
+   "0.00–0.01",
+   "0.00",
+   "0.00"
+  ],
+  [
+   "Gerçek kapı karelerinde yanlışlıkla \"kapı\" boyanan piksel payı (red)",
+   "0.35",
+   "—",
+   "0.17",
+   "0.001",
+   "0.002",
+   "0.003"
+  ],
+  [
+   "Gerçek iç mekân segmentasyonu (SUN RGB-D, mIoU)",
+   "0.733",
+   "0.728",
+   "0.697",
+   "0.745",
+   "0.736",
+   "0.738"
+  ],
+  [
+   "Gerçek dış mekân segmentasyonu (ADE20K, mIoU)",
+   "0.551",
+   "0.541",
+   "0.549",
+   "0.561 (yeni etiket)",
+   "0.570 (yeni etiket)",
+   "0.562 (yeni etiket)"
+  ],
+  [
+   "Drone bakışı segmentasyon (Aeroscapes, mIoU)",
+   "—",
+   "0.158*",
+   "0.676",
+   "0.623",
+   "0.661",
+   "0.641"
+  ],
+  [
+   "Gerçek derinlik hatası, iç / dış (DIODE, AbsRel; düşük iyi)",
+   "0.113 / 0.218",
+   "0.125 / 0.239",
+   "0.126 / 0.237",
+   "0.108 / 0.272 †",
+   "0.110 / 0.284 †",
+   "0.118 / 0.305 †"
+  ],
+  [
+   "Gerçek yol sahnesi segmentasyonu (BDD100K, mIoU; araba IoU)",
+   "—",
+   "—",
+   "—",
+   "0.672; 0.893",
+   "0.669; 0.899",
+   "0.676; 0.899"
+  ],
+  [
+   "Gerçek otoyolda şerit çizgisi yakalama (TuSimple, 233 test karesi)",
+   "—",
+   "—",
+   "0.00",
+   "0.00",
+   "0.83",
+   "0.83"
+  ]
+ ],
+ "sim_size": [
+  [
+   "4 px'ten küçük (993 kapı)",
+   "0.17",
+   "0.37",
+   "0.56"
+  ],
+  [
+   "4–8 px (1.079 kapı)",
+   "0.30",
+   "0.77",
+   "0.82"
+  ],
+  [
+   "8–16 px (409 kapı)",
+   "0.47",
+   "0.92",
+   "0.93"
+  ],
+  [
+   "16–32 px (71 kapı)",
+   "0.35",
+   "0.85",
+   "0.87"
+  ],
+  [
+   "32 px ve üstü (280 kapı)",
+   "1.00",
+   "0.99",
+   "0.99"
+  ],
+  [
+   "Hepsi (2.832 kapı)",
+   "0.35",
+   "0.67",
+   "0.76"
+  ]
+ ],
+ "ablation": [
+  [
+   "Tam tarif (bigD, tohum 0)",
+   "0.978",
+   "0.923",
+   "0.88",
+   "0.01"
+  ],
+  [
+   "Tam tarif, ikinci tohum",
+   "0.962",
+   "0.862",
+   "0.94",
+   "0.00"
+  ],
+  [
+   "Yoğun kapı başlığı yok (eski başlık)",
+   "0.702",
+   "0.260",
+   "0.24",
+   "0.33"
+  ],
+  [
+   "Veri artırma yok",
+   "0.901",
+   "0.824",
+   "0.65",
+   "0.02"
+  ],
+  [
+   "Genel kapısız negatifler yok",
+   "0.987",
+   "0.920",
+   "0.94",
+   "0.01"
+  ]
+ ],
+ "hybrid": [
+  [
+   "Gerçek kapı, hiç görülmemiş yer: 20 px / 10 px içinde",
+   "0.99 / 0.92",
+   "0.96 / 0.90"
+  ],
+  [
+   "Kısmen görünen gerçek kapı (34 kapı)",
+   "0.97",
+   "0.94"
+  ],
+  [
+   "Kapısız görüntüde yanlış alarm",
+   "0.00–0.01",
+   "0.00–0.01"
+  ],
+  [
+   "İç mekân segmentasyonu (SUN, mIoU)",
+   "0.745",
+   "0.719"
+  ],
+  [
+   "Yol sahnesi segmentasyonu (BDD100K, mIoU)",
+   "0.672",
+   "0.661"
+  ],
+  [
+   "Drone bakışı (Aeroscapes, mIoU)",
+   "0.623",
+   "0.660"
+  ],
+  [
+   "Derinlik hatası iç / dış (DIODE, ters derinlik hizalaması)",
+   "0.108 / 0.272",
+   "0.140 / 0.254"
+  ],
+  [
+   "Dosya boyutu (ONNX, tam duyarlık)",
+   "337 MB",
+   "31 MB"
+  ],
+  [
+   "TensorRT fp16, yalnızca ağ, boş RTX 5090",
+   "1.15 ms",
+   "0.68 ms"
+  ]
+ ],
+ "export": [
+  [
+   "PyTorch fp32, uçtan uca",
+   "6.4 ms (155 kare/sn)",
+   "2.5 ms (400 kare/sn)"
+  ],
+  [
+   "PyTorch fp16, uçtan uca",
+   "2.9 ms (344 kare/sn)",
+   "3.6 ms (279 kare/sn)"
+  ],
+  [
+   "TensorRT fp16, yalnızca ağ",
+   "1.15 ms (~870 kare/sn)",
+   "0.68 ms (~1470 kare/sn)"
+  ]
+ ],
+ "notes": [],
+ "last_update": 63,
+ "summary": "Yalnızca simülasyonla eğitilen model gerçek kapıları hiç bulamıyordu (%0). Gerçek veri eklemek bunu yaklaşık %48'e çıkardı; asıl sıçrama kapı başlığının yeniden tasarlanması, veri artırma ve kapısız gerçek görüntülerin \"negatif örnek\" olarak kullanılmasıyla geldi. Şu anki en iyi büyük modeller (bigE / bigF), eğitimde hiç görmediği gerçek bir yerde kapıların %99'unu 20 piksel, %92'sini 10 piksel hata içinde buluyor (bir önceki model iki tohumda %96–98); kapısız görüntülerde yanlış alarm vermiyor. Bu sayılar tek tohumla ve tek bir test yerinde (196 görüntü) alınmıştır; drone üzerinde uçuş testi henüz yapılmadı. <b>16 Kasım güncellemesi:</b> en yeni modeller bigL (büyük) ve bigL_h (küçük, Jetson Orin adayı). Tam görünen kapıda görülmemiş yerde 20 / 10 piksel içinde 0.97 / 0.89–0.91; kapısız görüntülerde yanlış kapı yok. Bu sürümlerde üç şey eklendi: gökyüzü ve bitki örtüsü etiketleri (dış mekân sınıf haritası düzeldi), şehir içi yollarda yol boyası işaretleme (zayıf etiketlerle) ve yalnızca bir köşesi ya da bir çerçeve parçası görünen \"yarım\" kapıların bulunması. Yarım kapı hâlâ zayıf: bir köşesi görünen kapıların yaklaşık yarısı ile üçte ikisi, yalnızca çerçeve parçası görünenlerin dörtte biri ile üçte biri doğru yere konabiliyor.",
+ "data_sources": [
+  [
+   "Simülasyon (kendi üretimimiz)",
+   "20.000 kare + 12.000 ışık/sis/bulanıklık karesi",
+   "Kapı, segmentasyon, derinlik (kusursuz etiket)"
+  ],
+  [
+   "TII Racing",
+   "Gerçek, tek salon, ~3.600 kare",
+   "Gerçek kapı köşeleri, kapısız kırpmalar"
+  ],
+  [
+   "MonoRaceGate (red hariç)",
+   "Gerçek, 3 farklı yer, ~280 kare",
+   "Gerçek kapı köşeleri"
+  ],
+  [
+   "DIODE",
+   "Gerçek, iç + dış mekân, 2.700 kare",
+   "Derinlik"
+  ],
+  [
+   "SUN RGB-D",
+   "Gerçek iç mekân, 3.964 kare",
+   "Segmentasyon + derinlik"
+  ],
+  [
+   "ADE20K (dış mekân)",
+   "Gerçek, 3.000 kare",
+   "Segmentasyon"
+  ],
+  [
+   "Aeroscapes",
+   "Gerçek, drone bakışı, 2.621 kare",
+   "Segmentasyon (bigD'den itibaren)"
+  ]
+ ],
+ "journey_notes": [
+  "<b>Simülasyon tek başına yetmedi.</b> Kapı rengini, mercek bozulmasını, ışığı simülasyonda çeşitlendirmek gerçek kapılarda hiçbir şey değiştirmedi (%0).",
+  "<b>Gerçek kare eklemek açtı ama sınırlı kaldı.</b> Tek salondan kareler modeli o salonu ezberlemeye itti; başka yerlerden az sayıda kare eklemek daha çok işe yaradı (%42 → yaklaşık %51).",
+  "<b>\"Gerçek görüntü = kapı var\" kestirmesi.</b> Eğitimdeki her gerçek karede kapı olduğu için model her gerçek görüntüde kapı \"görüyordu\". Kapısız gerçek görüntüler eklenince düzeldi.",
+  "<b>Asıl sıçrama başlıktan geldi.</b> Eski başlık tüm köşeleri görüntünün kaba bir özetinden tahmin ediyordu. Yenisi görüntünün her bölgesi için \"burada kapı merkezi var mı, köşeleri nerede\" diye soruyor (yoğun başlık). Veri artırma ve negatiflerle birlikte %48 → %94.",
+  "<b>İnce ızgara (bigD).</b> Izgarayı iki kat sıklaştırmak ve drone bakışlı veri eklemek %98'e çıkardı; aynı kapının iki kez bulunması sorununu köşe benzerliğine bakan bir eleme adımı çözdü.",
+  "<b>Videoda görülen kusur.</b> Kapı köşeleri doğru bulunurken, sınıf haritası gerçek salonlarda tavanı \"kapı\" diye boyuyordu (gerçek kapı karelerinin piksel etiketi yoktu). Köşe etiketlerinden zayıf etiket üretilerek sıradaki modele (bigE) eklendi.",
+  "<b>Derinlikte gizli çelişki.</b> Öğretmen modelin derinliği \"yakın = büyük\", etiketli gerçek derinlik \"uzak = büyük\" idi ve ikisi aynı çıktıyı zıt yönlere çekiyordu; model görüntüye göre anlam değiştiriyordu. bigE'de ikisi aynı uzaya getirildi.",
+  "<b>Şerit çizgisi.</b> Simülasyonda öğrenilen şerit çizgisi sınıfı gerçek yolda hiç çalışmıyordu (0.00). 267 gerçek otoyol karesi eklenince (bigF) aynı tür otoyolun görülmemiş karelerinde yakalama 0.83'e çıktı; farklı görünümlü şehir içi yollara ise henüz taşınmıyor."
+ ],
+ "rows_note": "mIoU: segmentasyon başarısı (0–1, yüksek iyi). AbsRel: derinlikte göreli hata (düşük iyi). * bigC Aeroscapes ile eğitilmemişti. Segmentasyon test kümeleri kare bazında ayrıldı (aynı sahnenin benzer kareleri eğitimde olabilir), bu yüzden biraz iyimser olabilir. bigD'nin \"red\" sayıları yinelenen tespit elemesi açıkken verilmiştir. † bigE'de derinlik çıktısı her görüntüde ters derinlik olacak şekilde düzeltildi ve buna uygun hizalamayla ölçüldü; önceki modellerin sayıları eski hizalamayla (kendi en iyi yöntemleriyle) verilmiştir, bu yüzden bu satır birebir karşılaştırma değildir. ADE20K'da bigE düzeltilmiş etiketlerle ölçüldü (eski etiketlerle 0.519).",
+ "sim_text": "bigC'nin simülasyonda uzak kapıları kaçırdığı düşünülüyordu (20 px ölçütüyle eski model %87, bigC %62–78). İnceleme şunu gösterdi: simülasyondaki \"tam görünen\" kapıların %73'ü 8 pikselden küçük (çok uzak) kapılar ve bütün fark orada. Daha sıkı, kapı boyutuna göre ölçeklenen bir ölçütle bakınca sıra tersine dönüyor: eski başlık uzak kapıların yerini kabaca tahmin ediyormuş, yoğun başlık ise gerçekten yerini buluyor. Kalan açık, 8 pikselden küçük kapılarda düşük güven puanı; eşiği 0.5'ten 0.3'e indirmek bunun çoğunu kare başına 0.04–0.09 fazladan tahmin karşılığında kapatıyor.",
+ "limits": [
+  "Kapı genellemesi tek bir görülmemiş yerde (196 görüntü, 312 kapı) ölçüldü; çoğu sonuç tek tohum (kapıda ±0.06 oynar).",
+  "Yarım kapı ölçümü kırpılmış karelerle yapılan bir taklittir; gerçek yakın geçiş görüntüsüyle doğrulanmadı. Bir köşesi görünen kapıların üçte biri ile yarısı, yalnızca çerçeve parçası görünenlerin çoğu hâlâ doğru yere konamıyor. Gerçek karelerdeki etiketsiz yarım kapılar eğitimde hâlâ \"kapı yok\" sayılıyor.",
+  "DroneRacing'in kendi kamerasıyla çekilmiş kare yok; gerçek uçuşta (30 m/s'ye kadar) test yapılmadı. Jetson Orin'de hız ve doğruluk ölçülmedi.",
+  "Bulanıklık, sis ve ışık dayanıklılığı yalnızca simülasyon efektleriyle ölçüldü; en zor karışımda (30 m/s + karanlık + sis) kapı bulma simülasyonda bile yaklaşık %60.",
+  "Şehir içi yol boyası için bağımsız etiketli test yok; etiketler otomatik ve gürültülü.",
+  "Zayıf sınıflar: hiç görülmemiş yollarda \"diğer engel\" (0.05–0.08), yüksekten bakışta insan (0.05–0.11), arazide kaya (0.08–0.16); insan ile motosiklet/araç ayrımı bir ödünleşim.",
+  "16 Kasım'dan önceki segmentasyon puanları gökyüzü ve bitki örtüsü piksellerini saymıyordu ve dış mekânda olduğundan iyi görünüyordu; güncel tablolar bu pikselleri sayıyor.",
+  "Segmentasyon test kümelerinin bir kısmı sahne bazında değil kare bazında ayrıldı; sayılar bir miktar iyimser olabilir."
+ ],
+ "next": [
+  "Küçük modelin (bigL_h) ikinci tohumu (sürüyor) ve yarım kapı için daha geniş kırpma aralığı.",
+  "Jetson Orin erişilebilir olunca TensorRT motorunun orada kurulması, hız ve doğruluk ölçümü.",
+  "Kendi kameradan görüntü gelince: sıfırdan ölçüm, gerekirse kısa ince ayar; yakın geçiş karelerinde yarım kapı ölçümünün doğrulanması.",
+  "Yüksekten bakışta insan için kareyi parçalara bölerek çalıştırma seçeneğinin hız maliyetiyle ölçülmesi; yeni ortam türleriyle (gece, kar, koridor) sınama."
+ ],
+ "ablation_head": [
+  "Deneme (hepsi bigD verisi, 10 epoch)",
+  "red: 20 px",
+  "red: 10 px",
+  "Kısmen görünen kapı",
+  "Fazladan tahmin / kare"
+ ],
+ "ablation_intro": "<p>bigC/bigD'deki üç değişikliği tek tek kapatıp aynı eğitimi yeniden yaptık. Ölçüm yine hiç görülmemiş \"red\" yerinde.</p>",
+ "ablation_after": "<p><b>Okuma.</b> Sıçramanın asıl nedeni yoğun kapı başlığı: o olmadan 10 px başarısı 0.92'den 0.26'ya düşüyor. Veri artırma üstüne yaklaşık 0.06–0.08 ekliyor ve en çok kısmen görünen kapılarda işe yarıyor. Genel veri kümelerini \"kapısız örnek\" olarak kullanmanın ölçülebilir bir etkisi çıkmadı (ne bulma oranında ne yanlış alarmda); zararı da yok. İki tohum arasındaki fark 0.02–0.06; başlık etkisi bunun çok dışında, artırma etkisi sınırda, negatif etkisi gürültünün içinde.</p>",
+ "export_head": [
+  "Yol (448×448, tek kare, boş RTX 5090)",
+  "Büyük model (vit)",
+  "Küçük model (hybrid)"
+ ],
+ "export_intro": "<p>İki model de ONNX biçimine aktarıldı (kapı çözme adımı dahil tek dosya) ve TensorRT 11 motorları üretildi. ONNX çıktıları PyTorch ile aynı (fark 0.0001'in altında); TensorRT fp16 motorları 24 gerçek karenin 24'ünde aynı kapıları buluyor, en büyük köşe farkı 0.3 piksel.</p>",
+ "export_after": "<p class='small'>Uçtan uca: 640×480 kareyi GPU'ya yükleme, yeniden boyutlama, ağ, kapı çözme ve sonuçların geri alınması. Küçük modelde PyTorch'un yarım duyarlık kipi tam duyarlıktan yavaş çıkıyor (küçük evrişimli ağda kip değiştirme yükü baskın); TensorRT'de bu sorun yok. Bunlar masaüstü GPU sayılarıdır; Jetson Orin'de ölçüm yapılmadı.</p>",
+ "sim_models": [
+  "bigB",
+  "bigC",
+  "bigD"
+ ],
+ "sheet_image": "runs/eval/vis/model_sheet_bigL_h_hybrid.jpg",
+ "sheet_text": "Drone için aday olan küçük model bigL_h ile üretildi. Aşağıdaki görüntülerin hiçbiri eğitimde kullanılmadı. Her satırda solda kamera görüntüsü ve bulunan kapılar (yeşil), ortada modelin her piksele verdiği sınıf, sağda göreli derinlik (kırmızı = yakın) var. İyi çalışanlar: kapı köşeleri, kapı çerçevesi, araba, insan, bina, zemin, mobilya, ağaç / bitki örtüsü, derinliğin genel yapısı. bigH ile gökyüzü artık arka plan olarak bırakılıyor (önceki modeller gökyüzünü rastgele bir sınıfa boyuyordu). Kalan kusurlar: ince direk ve teller kaba çıkıyor; şehir içi yolda yol boyası kısmen işaretleniyor.",
+ "hybrid_head": [
+  "Ölçüt",
+  "Büyük model (vit, bigE)",
+  "Küçük model (hybrid, bigE_h)"
+ ],
+ "hybrid_intro": "<p>Jetson Orin için hedeflenen küçük model (FastViT, 11 milyon parametre; büyük model 92 milyon) aynı veri ve tarifle eğitildi.</p>",
+ "hybrid_after": "<p class='small'>Küçük model kapıda büyük modelin tohumdan tohuma oynama aralığının içinde; segmentasyon ve derinlikte çoğu ölçütte 0.01–0.03 geride. Asıl hedef olan Jetson Orin üzerinde hız ve doğruluk ölçümü henüz yapılmadı.</p><p class='small'><b>Güncel (bigH_h, yeni etiket kümesiyle küçük model, tek tohum):</b> görülmemiş yerde kapı 0.97 / 0.91 (büyük model bigH 0.97 / 0.87; fark ±0.06 gürültünün içinde). Gökyüzü dahil puanlamada yol ve arazi kümelerinde büyük modelle aynı düzeyde (IDD-AW 0.61'e karşı 0.59, BDD 0.74'e karşı 0.75). Büyük model yalnızca drone bakışında (0.62'ye karşı 0.58) ve şeritte (0.82'ye karşı 0.77) önde. TensorRT fp16 ile boş RTX 5090'da 0.68 ms.</p><p class='small'><b>16 Kasım (bigL_h):</b> küçük model yarım kapı, yol boyası ve motosiklet değişikliklerinin hepsini aldı; tam görünen kapıda 0.97 / 0.91, yanlış kapı yok. TensorRT fp16 ile boş RTX 5090'da 0.71 ms. Jetson Orin şu an elde olmadığı için orada ölçüm yapılmadı.</p>",
+ "envs_image": "runs/eval/vis/model_sheet_bigL_h_hybrid_env2.jpg",
+ "envs_head": [
+  "Ortam (test kareleri eğitimde yok)",
+  "Ölçüt",
+  "Hiç görmeden (bigF)",
+  "O ortamdan veri eklenince (bigG)"
+ ],
+ "envs_intro": "<p>Kapı çalışmasına ara verip modeli eğitimde hiç bulunmayan türden üç gerçek ortamda sınadık. Önce hiçbir şey eklemeden ölçtük, sonra iki ortamdan az miktarda etiketli veri (test karelerinden ayrı diziler) ekleyip yeniden eğittik.</p>",
+ "envs": [
+  [
+   "Yüksekten drone bakışı şehir (UAVid), tam kare",
+   "Segmentasyon mIoU",
+   "0.31",
+   "0.62"
+  ],
+  [
+   "Aynı, yakınlaştırılmış parçalar",
+   "Segmentasyon mIoU",
+   "0.32",
+   "0.72"
+  ],
+  [
+   "Arazi / orman yolu (RUGD), ayrılmış 4 dizi",
+   "Segmentasyon mIoU",
+   "0.43",
+   "0.48"
+  ],
+  [
+   "Araç kamerası yol (KITTI)",
+   "Derinlik hatası (düşük iyi)",
+   "0.081",
+   "0.082 (veri eklenmedi)"
+  ]
+ ],
+ "envs_after": "<p><b>Okuma.</b> Yeni türden bir sahnede hiç veri olmadan segmentasyon 0.3–0.5 düzeyinde kalıyor; derinlik ise çok daha iyi taşınıyor. O ortamdan birkaç yüz–bin etiketli kare eklemek o ortamı belirgin biçimde iyileştiriyor (drone bakışı iki katına çıktı) ve diğer hiçbir ölçütü bozmadı (kapı 0.98 / 0.89, diğerleri aynı). Zayıf kalanlar: yüksekten bakışta insanlar (birkaç piksel), arazide kaya ve çalı / çit / kütük gibi engeller.</p><p><b>Gökyüzü ve bitki örtüsü düzeltmesi (bigH).</b> Önceki tüm segmentasyon puanlarında gökyüzü ve (yol verisinde) bitki örtüsü pikselleri puanlamaya katılmıyordu; bu yüzden o puanlar dış mekânda sınıf haritasının ne kadar kullanılabilir olduğunu olduğundan iyi gösteriyordu. Bu pikseller de sayıldığında bigG'nin piksel doğruluğu yol sahnelerinde 0.43–0.60'a düşüyordu. bigH'de gökyüzü \"arka plan\", bitki örtüsü \"ağaç\" olarak etiketlendi ve model yeniden eğitildi (yeni veri eklenmedi).</p><table><tr><th>Test kümesi (gökyüzü ve bitki dahil puanlama)</th><th>bigG: mIoU / piksel doğruluğu</th><th>bigH: mIoU / piksel doğruluğu</th></tr><tr><td>Araç kamerası yol (BDD doğrulama; aynı kaynaktan eğitim verisi var)</td><td>0.40 / 0.60</td><td>0.75 / 0.93</td></tr><tr><td>Genel dış mekân (ADE ayrılmış; aynı kaynak)</td><td>0.42 / 0.63</td><td>0.59 / 0.83</td></tr><tr><td>Arazi / orman yolu (RUGD, ayrılmış 4 dizi)</td><td>0.38 / 0.81</td><td>0.51 / 0.87</td></tr><tr><td>Kötü havada Hindistan yolları (IDD-AW; bu kaynaktan hiç eğitim verisi yok)</td><td>0.29 / 0.43</td><td>0.59 / 0.87</td></tr></table><p class='small'>Tek tohum. Kapı (0.97 / 0.87; bigG 0.98 / 0.89, fark ±0.06 gürültünün içinde), derinlik, şerit ve drone bakışı ölçütleri değişmedi. Hâlâ zayıf: hiç görülmemiş yollarda \"diğer engel\" sınıfı (0.06), yüksekten bakışta insanlar, arazide kaya, otoyol dışındaki yollarda şerit çizgisi. Sayfanın sonundaki görsel küçük model bigL_h'nin hiç veri görmediği IDD-AW karelerindeki çıktısıdır.</p><h3>Yarım kapılar (16 Kasım)</h3><p>Eğitim verisinde yalnızca bir köşesi görünen kapı neredeyse hiç yoktu (60 bin simülasyon kapısında 267), gerçek etiketlerde hiç yoktu. Tam görünen kapılı karelerin bir kısmı eğitim sırasında kırpılarak 0–1 köşesi görünür hale getirildi. Ölçüm: hiç görülmemiş yerdeki tam etiketli kapılar aynı yolla kırpıldı (bir köşe: 380 örnek; hiç köşe yok, yalnızca çerçeve parçası: 99 örnek). \"Doğru yere kondu\" = dört köşenin (görünmeyenler dahil) ortalama hatası kapı boyutunun çeyreğinden az. Bu, gerçek yakın geçişin yaklaşık bir taklididir; kendi kameramızla doğrulanmadı. Tek tohum.</p><table><tr><th>Ölçüt</th><th>Önceki modeller</th><th>bigL (büyük)</th><th>bigL_h (küçük)</th></tr><tr><td>Bir köşe görünüyor: doğru yere kondu</td><td>0.22–0.40</td><td>0.53</td><td>0.71</td></tr><tr><td>Bir köşe görünüyor: hiç tahmin yok</td><td>0.31–0.55</td><td>0.03</td><td>0.08</td></tr><tr><td>Hiç köşe yok: doğru yere kondu</td><td>0.00–0.05</td><td>0.39</td><td>0.27</td></tr><tr><td>Hiç köşe yok: hiç tahmin yok</td><td>0.71–0.76</td><td>0.18</td><td>0.41</td></tr><tr><td>Kırpma başına eşleşmeyen tahmin (neredeyse tümü gerçek bir kapının kaba tahmini)</td><td>0.03–0.04</td><td>0.20</td><td>0.10</td></tr><tr><td>Tam görünen kapı, 20 / 10 piksel (değişmemeli)</td><td>0.97 / 0.87–0.91</td><td>0.97 / 0.89</td><td>0.97 / 0.91</td></tr></table><h3>Yol boyası, motosiklet ve insan (16 Kasım)</h3><p><b>Yol boyası.</b> Etiketli gerçek şerit verisi bulunamadı; araç kamerası karelerinde yol üstündeki belirgin parlak boya otomatik bir kuralla \"şerit\" olarak etiketlendi (gürültülü: yaya geçidi ve okları da kapsar). Otoyol testinde (gerçek etiket) yakalama 0.80–0.84 ile aynı kaldı. Şehir içi yolda model artık boyayı işaretliyor, ancak bunu ölçecek bağımsız etiketli test yok; aynı kuralla ölçülen 0.32–0.37 değeri yalnızca etiketlerin öğrenildiğini gösterir. Bedeli: düz yolun yaklaşık %2'si yanlışlıkla şerit sayılıyor.</p><p><b>Motosiklet ve insan.</b> Önceki modeller motosikleti insan olarak boyuyordu (piksellerin %21'i). Motosiklet ve bisiklet \"araç\" sınıfına alındı, sürücü \"insan\" kaldı. Hiç veri görülmeyen yollarda (IDD-AW) bigL_h: motosiklet piksellerinin %63'ü araç, %23'ü insan; yaya piksellerinin %69'u insan, %19'u araç. İnsan sınıfının ağırlığı bir ödünleşimdir: düşük tutulunca motosiklet temiz çıkıyor (%6 insan) ama yayaların %29'u araç sayılıyor; yüksek tutulunca tersi. Şu an yayalar öncelikli tutuldu.</p>"
+}

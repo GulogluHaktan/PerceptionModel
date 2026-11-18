@@ -1,0 +1,15 @@
+# Pipeline smoke test with fake data/teachers (runs anywhere).
+student: vit            # vit | hybrid
+images: data/fake/images_root
+cache: data/fake/cache
+golden: data/fake/golden
+out_dir: runs/smoke
+size: 224
+teachers:
+  - {name: fake_sem, kind: fake, weight: 1.0}
+  - {name: fake_depth, kind: fake_depth}
+batch: 8
+epochs: 2
+lr: 3.0e-4
+workers: 0
+pretrained: false

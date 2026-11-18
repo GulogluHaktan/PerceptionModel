@@ -1,0 +1,17 @@
+# data and training outputs (large, licence-restricted sources: BDD100K, RUGD, IDD-AW, UAVid, KITTI)
+data/
+runs/
+.venv/
+__pycache__/
+*.pyc
+*.pt
+*.pth
+*.onnx
+*.engine
+*.mp4
+*.zip
+.env
+*.key
+*.pem
+assets/
+.isaac_env

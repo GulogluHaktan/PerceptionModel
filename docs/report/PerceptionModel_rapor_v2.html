@@ -1,0 +1,109 @@
+<html><head><meta charset='utf-8'><style>
+@page { size: A4; margin: 17mm 16mm 18mm 16mm; @bottom-center { content: counter(page) " / " counter(pages); font-size: 8pt; color: #777; } @bottom-left { content: "PerceptionModel · sürüm 1 raporu"; font-size: 8pt; color: #999; } }
+body { font-family: 'DejaVu Sans', sans-serif; font-size: 9.7pt; line-height: 1.47; color: #111111; }
+h1 { font-size: 21pt; margin: 0 0 1mm 0; } h2 { font-size: 13.5pt; margin: 8mm 0 2.5mm 0; border-bottom: 1.2px solid #999; padding-bottom: 1mm; break-after: avoid; }
+h3 { font-size: 10.8pt; margin: 4.5mm 0 1.5mm 0; break-after: avoid; } p { margin: 0 0 2.2mm 0; }
+table { border-collapse: collapse; width: 100%; margin: 2mm 0 3mm 0; font-size: 8.9pt; break-inside: avoid; } th, td { border: 1px solid #c8c8c8; padding: 1.5mm 2mm; text-align: left; vertical-align: top; }
+th { background: #eef2f7; } td:not(:first-child), th:not(:first-child) { text-align: center; } table.txt td:not(:first-child), table.txt th:not(:first-child) { text-align: left; }
+.box { background: #f3f6fa; border-left: 3px solid #2a6fdb; padding: 3mm 4mm; margin: 3mm 0; break-inside: avoid; } .warn { border-left-color: #c98500; background: #fbf6e9; }
+.small { font-size: 8.4pt; color: #444; } img { max-width: 100%; } li { margin-bottom: 1.1mm; } ul { margin: 1mm 0 2.5mm 0; padding-left: 5mm; }
+.kpi { width: 100%; border: none; margin: 3mm 0; } .kpi td { border: none; background: #f3f6fa; padding: 3mm 3mm; text-align: left !important; width: 25%; border-right: 2mm solid white; }
+.kpi b { font-size: 15pt; display: block; } .kpi span { font-size: 8.2pt; color: #444; } .pb { break-before: page; } figure { margin: 2mm 0 3mm 0; break-inside: avoid; } figcaption { font-size: 8.3pt; color: #444; margin-top: 1mm; }
+</style></head><body>
+<h1>PerceptionModel: sürüm 1 raporu</h1>
+<p class='small'>16 Kasım 2026 · RTX 5090 üzerinde yapılan eğitim ve ölçümler · ayrıntılı deney günlüğü: docs/handoff/perceptionmodel-sim-plan.md (Update 24–69) · model dosyaları: runs/release_v1/</p>
+
+<div class='box'><b>Bir cümleyle.</b> Tek kamera görüntüsünden yarış kapılarını, sahnedeki nesne sınıflarını ve derinliği çıkaran küçük model (sürüm 1, "bigL_h") donduruldu: eğitimde hiç görmediği gerçek bir yerde
+tam görünen kapıların %95–97'sini buluyor, kapısız görüntülerde yanlış kapı üretmiyor ve simülasyonda döngüye bağlandığında 12 m/s'ye kadar kapıların %99'undan geçiriyor; çok yakın ve çok uzak kapılar ile
+kendi kameramızla doğrulama hâlâ açık.</div>
+
+<table class='kpi'><tr>
+<td><b>%95–97</b><span>tam görünen kapı, hiç görülmemiş gerçek yer, 20 piksel içinde (iki tohum)</span></td>
+<td><b>0</b><span>yanlış kapı, 600 kapısız gerçek görüntüde</span></td>
+<td><b>349 / 352</b><span>kapı geçildi, kapalı döngü simülasyon, 12 m/s'ye kadar (gerçek başarı oranı değildir)</span></td>
+<td style='border-right:none'><b>16.7 ms</b><span>Jetson Orin NX'te ağ süresi, 448 piksel (60 kare/sn; rastgele ağırlıkla ölçüm)</span></td></tr></table>
+
+<h3>İyi olanlar</h3>
+<ul><li>Tam görünen kapılar, görülmemiş gerçek bir yerde: 20 piksel içinde 0.95–0.97, 10 piksel içinde 0.88–0.91.</li>
+<li>Kareden kareye kararlılık: gerçek uçuş videosunda köşe titremesi ortanca 0.8 piksel, tek karelik kopma %1'in altında.</li>
+<li>Simülasyonda döngüde: 1–2 m hatalı bir kapı haritası tek başına kapıların %8–32'sinden geçirirken, model eklenince %99–100.</li>
+<li>Genel algı: hiç veri görülmeyen yollarda sınıf haritası kullanılabilir düzeyde (ortalama kesişim oranı 0.61), derinlik hiç görülmeyen araç kamerasında %8 hata.</li></ul>
+<h3>Zayıf olanlar</h3>
+<ul><li>Gerçek videoda çok yakın kapılar (görüntüde 100 pikselden büyük): 20 piksel içinde yalnızca 0.40. Çok uzak kapılar (16 pikselden küçük): 0.4–0.6.</li>
+<li>Yalnızca bir köşesi ya da bir çerçeve parçası görünen "yarım" kapılar: taklit ölçümde 0.71–0.77 ve 0.27; gerçek yakın geçişte doğrulanmadı.</li>
+<li>Kendi kameramızla (IMX219) tek bir kare bile görülmedi; simülasyon 130° kamerayla üretildi, lens farklıysa sonuçlar değişir.</li>
+<li>20 m/s ve üstünde kapalı döngü testi algıyı ölçemiyor (basit kontrolcü sınırlıyor).</li></ul>
+<div class='box warn'><b>Sayıları okurken.</b> Kapı sayıları tek bir görülmemiş yerde (196 görüntü, 312 kapı) ölçüldü ve aynı tarifle yeniden eğitimde ±0.06 oynuyor. Simülasyon sonuçları "başarı oranı" değildir.
+TII uçuş videoları eğitimde görülen salonda çekildi; oradaki sayılar yeni bir yere genelleme göstermez.</div>
+
+<h2 class='pb'>1. Model ne yapıyor?</h2>
+<p>Tek bir kamera görüntüsünden üç çıktı üretir: <b>(1)</b> en çok 4 yarış kapısının dört köşesi (köşe görüntünün dışında kalsa bile tahmin edilir), <b>(2)</b> her pikselin sınıfı
+(zemin/yol, bina, ağaç ve bitki örtüsü, insan, araç, kaya, şerit çizgisi, rakip drone, diğer engel, kapı; gökyüzü "arka plan"), <b>(3)</b> göreli derinlik. Büyük hazır modellerden
+(DINOv2, Depth Anything v2) bilgi damıtılarak ve etiketli verilerle eğitilir.</p>
+<table class='txt'><tr><th></th><th>Sürüm 1: küçük model (bigL_h)</th><th>Büyük model (bigL)</th></tr><tr><td>Omurga</td><td>FastViT-SA24, 11 milyon parametre</td><td>ViT-B, 92 milyon parametre</td></tr><tr><td>Amaç</td><td>Drone üzerindeki Jetson Orin</td><td>Karşılaştırma ve masaüstü</td></tr><tr><td>RTX 5090, yalnızca ağ (TensorRT fp16)</td><td>0.71 ms</td><td>1.16 ms</td></tr><tr><td>Jetson Orin NX 8 GB, 448 piksel, MAXN, yalnızca ağ *</td><td>16.7 ms (60 kare/sn)</td><td>25.2 ms (40 kare/sn)</td></tr><tr><td>Dosyalar</td><td>runs/release_v1/</td><td>runs/bigL/vit/</td></tr></table>
+<p class='small'>* Orin ölçümü 10 Kasım'da aynı mimariyle fakat rastgele ağırlıklarla yapıldı (docs/ORIN_RESULTS.md); kamera okuma ve ön/son işlem süresi ile eğitilmiş ağırlıkların Orin'deki doğruluğu ölçülmedi.
+Önceki raporda "Orin'de hiç ölçüm yok" yazıyordu; bu yanlıştı, hız ölçümü vardı.</p>
+
+<h2>2. Kapı bulma: hiç görülmemiş gerçek yer</h2>
+<p>MonoRaceGate veri kümesinin "red" adlı yeri eğitime hiç konmadı. Aşağıdaki grafik, o yerde 20 piksel hata içinde bulunan kapı payının süreç boyunca nasıl değiştiğini gösterir.</p>
+<figure><img src='/home/shannon/Projects/PerceptionModel/docs/report/v2_journey.png' style='width:84%'></figure>
+<p>Asıl sıçrama üç değişiklikle geldi: kapı başlığının yeniden tasarlanması (her kapı için merkez noktası + köşe uzaklıkları), veri artırma ve kapısız gerçek görüntülerin "burada kapı yok" örneği olarak kullanılması.
+Sonraki adımlar kapı sayısını değil, modelin diğer yeteneklerini geliştirdi; kapı sayısı 0.95–0.99 aralığında tohumdan tohuma oynuyor.</p>
+<table class=''><tr><th>Ölçüt (sürüm 1, küçük model)</th><th>Tohum 0</th><th>Tohum 1</th></tr><tr><td>Tam görünen kapı, 20 piksel içinde</td><td>0.971</td><td>0.952</td></tr><tr><td>Tam görünen kapı, 10 piksel içinde</td><td>0.913</td><td>0.881</td></tr><tr><td>Köşe hatası (ortanca, 256×192 ölçeğinde)</td><td>2.5 piksel</td><td>2.6 piksel</td></tr><tr><td>Yanlış kapı: kapısız yol ve dış mekân görüntüleri (600 kare)</td><td>0.00</td><td>0.00</td></tr></table>
+<figure class='pb'><img src='/home/shannon/Projects/PerceptionModel/runs/eval/vis/real_gates_compare.jpg' style='height:225mm; width:auto; display:block; margin:0 auto'><figcaption>Önce / sonra: aynı gerçek karelerde yalnızca simülasyonla eğitilmiş model ve gerçek veriyle eğitilmiş model.</figcaption></figure>
+
+<h2 class='pb'>3. Gerçek uçuş videosunda davranış</h2>
+<p>Tek tek karelere bakmak uçuşta önemli olanı gizler: kapı kareden kareye kayboluyor mu, köşeler titriyor mu? Bunu TII veri kümesinin eğitimde kullanılmayan üç uçuşunda ölçtük
+(saniyede yaklaşık 120 kare, 16.132 kare, 34.592 kapı-kare). <b>Salon eğitimde görülen salondur;</b> bu bölüm yeni yere genellemeyi değil, zaman içindeki davranışı ölçer.</p>
+<table class=''><tr><th>Ölçüt</th><th>Sürüm 1 (bigL_h)</th><th>Büyük model (bigL)</th></tr><tr><td>Kapı-kare başına bulma (20 piksel içinde)</td><td>0.903</td><td>0.900</td></tr><tr><td>Tek karelik kopma (1000 kapı-karede)</td><td>6.7</td><td>9.5</td></tr><tr><td>100 milisaniyeden uzun kayıplardaki kapı-kare payı</td><td>%4.0</td><td>%3.0</td></tr><tr><td>Son 3 kareyi tutan basit izleyiciyle bulma</td><td>0.937</td><td>0.940</td></tr><tr><td>Köşe titremesi, ortanca / %90'lık</td><td>0.84 / 3.0 piksel</td><td>0.94 / 3.4 piksel</td></tr><tr><td>Kapı görüşten çıkmadan önceki son 100 milisaniyede bulma</td><td>0.80</td><td>0.77</td></tr></table>
+<figure><img src='/home/shannon/Projects/PerceptionModel/docs/report/v2_size.png' style='width:92%'><figcaption>Sürüm 1, kapının görüntüdeki boyutuna göre (256×192 ölçeği). Orta boy kapılar çok iyi; iki uç zayıf.</figcaption></figure>
+<p><b>Okuma.</b> Model kareden kareye sakin ve küçük modelin titremesi büyük modelden az. Basit bir izleyici (son tespiti birkaç kare tutmak) bulma oranını 0.90'dan 0.94'e çıkarıyor; uçuş yazılımında böyle bir izleyici olmalı.
+İki gerçek zayıflık var: çok uzak ve çok yakın kapılar. Yakın kapı için eğitimde yapılan "yarım kapı" çalışması bu videoda neredeyse fark yaratmadı (boyuta göreli ölçütle 0.66'dan 0.69'a).</p>
+
+<h2>4. Yarım kapılar (taklit ölçüm)</h2>
+<p>Yalnızca bir köşesi ya da bir çerçeve parçası görünen kapılar eğitim verisinde neredeyse hiç yoktu. Tam görünen kapılı kareler eğitim sırasında kırpılarak bu durum üretildi; ölçüm de görülmemiş yerdeki kapılar aynı yolla kırpılarak yapıldı.
+"Doğru yere kondu": dört köşenin (görünmeyenler dahil) ortalama hatası kapı boyutunun çeyreğinden az.</p>
+<table class=''><tr><th>Ölçüt</th><th>Önceki küçük model</th><th>Sürüm 1 (iki tohum)</th></tr><tr><td>Bir köşe görünüyor (380 örnek): doğru yere kondu</td><td>0.32</td><td>0.71 – 0.77</td></tr><tr><td>Bir köşe görünüyor: hiç tahmin yok</td><td>0.45</td><td>0.07 – 0.08</td></tr><tr><td>Hiç köşe yok, yalnızca çerçeve parçası (99 örnek): doğru yere kondu</td><td>0.04</td><td>0.27</td></tr><tr><td>Hiç köşe yok: hiç tahmin yok</td><td>0.71</td><td>0.41 – 0.43</td></tr></table>
+<div class='box warn'><b>Dikkat.</b> Bu, uzaktaki bir kapının kırpılmasıyla yapılan bir taklittir. Gerçek uçuş videosundaki yakın kapılarda (bölüm 3) aynı kazanç görülmedi; "yakın geçiş çözüldü" denemez.
+Gerçek yakın geçiş görüntüsü (kendi kameramızdan) gelince yeniden ölçülmeli.</div>
+
+<h2 class='pb'>5. Kapalı döngü simülasyon: algı, geçişi bozuyor mu?</h2>
+<p>Model bir simülatörde basit bir drone'a bağlandı: her adımda kameradan görüntü çizilir, model kapı köşelerini bulur, köşelerden kapının metre cinsinden konumu hesaplanır ve drone o konuma yönelir.
+Drone'un elinde kaba bir kapı haritası vardır (her kapı 1–2 m hatalı); model bu haritayı düzeltir. Üç durum karşılaştırıldı: yalnızca harita, harita + model, gerçek kapı konumları (kontrolcünün üst sınırı).</p>
+<figure><img src='/home/shannon/Projects/PerceptionModel/docs/report/v2_loop.png' style='width:92%'></figure>
+<div class='box warn'><b>Bu bir simülasyon sonucudur, gerçek başarı oranı değildir.</b> Sahneler eğitim verisini üreten çiziciyle çizildi (parkur yerleşimleri eğitimde yok), drone bir nokta kütledir, kendi konumunu tam bilir,
+rüzgâr ve satır satır okuma (rolling shutter) yoktur, kamera 130°'dir.</div>
+<ul><li><b>12 m/s'ye kadar</b> model döngüdeyken kapıların %99–100'ü geçildi (48 uçuşta 352 kapının 349'u); 2 m harita hatası ve karanlık + bulanık görüntü dahil. Bir kare gecikme (yaklaşık 17 ms) fark yaratmadı.</li>
+<li><b>20 ve 30 m/s'de</b> test algı hakkında bir şey söylemiyor: kapı konumları tam bilinse bile kapıların %50'si ve %34'ü geçiliyor, çünkü kontrolcü sabit hızla uçuyor ve dönüşten önce yavaşlamıyor.
+30 m/s'de modelin kapı konum hatası da büyüyor (geçiş anında 0.6 m; 12 m/s'de 0.15 m).</li>
+<li><b>Mesafeye göre konum hatası</b> (simülasyon): 3 m içinde 7 cm, 6–12 m'de 0.2 m, 12–25 m'de 0.8 m, 25 m'den uzakta kullanılamaz. Uzak kapılar yalnızca yön bilgisi olarak kullanılmalı.</li></ul>
+<figure><img src='/home/shannon/Projects/PerceptionModel/runs/eval/vis/closed_loop_c_race_0.jpg' style='width:100%'><figcaption>Bir parkurda üç uçuşun kuşbakışı yolu, tüm koşulların özeti ve modelin uçuş sırasında gördüğü kareler (yeşil: bulunan kapılar).</figcaption></figure>
+
+<h2 class='pb'>6. Genel algı: sınıf haritası ve derinlik</h2>
+<table class='txt'><tr><th>Test (kareler eğitimde yok)</th><th>Ölçüt</th><th>Sürüm 1 (bigL_h)</th><th>Büyük model (bigL)</th></tr><tr><td>Kötü havada Hindistan yolları (IDD-AW); bu kaynaktan hiç eğitim verisi yok</td><td>Ortalama kesişim oranı</td><td>0.61</td><td>0.58</td></tr><tr><td>Araç kamerası yol (BDD); aynı kaynaktan eğitim verisi var</td><td>Ortalama kesişim oranı</td><td>0.73</td><td>0.74</td></tr><tr><td>Arazi / orman yolu (RUGD), ayrılmış 4 dizi</td><td>Ortalama kesişim oranı</td><td>0.51</td><td>0.51</td></tr><tr><td>Yüksekten drone bakışı şehir (UAVid)</td><td>Ortalama kesişim oranı</td><td>0.59</td><td>0.62</td></tr><tr><td>Otoyol şerit çizgisi (TuSimple, gerçek etiket)</td><td>Yakalama</td><td>0.78 – 0.80</td><td>0.83</td></tr><tr><td>Araç kamerası derinlik (KITTI); hiç eğitim verisi yok</td><td>Göreli hata (düşük iyi)</td><td>0.08</td><td>0.08</td></tr><tr><td>Yaya pikselleri (IDD-AW): insan / araç olarak işaretlenen</td><td>Pay</td><td>0.69 / 0.19</td><td>0.63 / 0.18</td></tr><tr><td>Motosiklet pikselleri (IDD-AW): araç / insan olarak işaretlenen</td><td>Pay</td><td>0.63 / 0.23</td><td>0.61 / 0.19</td></tr></table>
+<p><b>Bu bölümde yapılan düzeltmeler.</b></p>
+<ul><li><b>Gökyüzü ve bitki örtüsü:</b> eski modeller gökyüzünü rastgele bir sınıfa boyuyordu ve eski puanlar bu pikselleri saymadığı için durumu olduğundan iyi gösteriyordu. Gökyüzü "arka plan", bitki örtüsü "ağaç" olarak etiketlendi;
+hiç veri görülmeyen yollarda piksel doğruluğu 0.43'ten 0.87'ye çıktı. Bu tablodaki sayılar gökyüzünü ve bitki örtüsünü sayar.</li>
+<li><b>Şehir içi yol boyası:</b> etiketli gerçek veri bulunamadı; yol üstündeki parlak boya otomatik bir kuralla etiketlendi. Model artık şehir içi yolda boyayı kısmen işaretliyor, ama bunu ölçecek bağımsız etiketli test yok.
+Bedeli: düz yolun yaklaşık %2'si yanlışlıkla şerit sayılıyor.</li>
+<li><b>Motosiklet:</b> motosikletler insan olarak boyanıyordu. Motosiklet ve bisiklet "araç" sınıfına alındı. İnsan sınıfının ağırlığı bir ödünleşim: yayalar öncelikli tutuldu, bu yüzden motosikletin bir kısmı (%23) hâlâ insan olarak işaretleniyor.</li></ul>
+<p><b>Zayıf sınıflar:</b> hiç görülmemiş yollarda "diğer engel" (0.05–0.10), yüksekten bakışta insan (0.05–0.11; kare parçalara bölünürse 0.28), arazide kaya (0.08–0.16).</p>
+<figure class='pb'><img src='/home/shannon/Projects/PerceptionModel/runs/eval/vis/model_sheet_bigL_h_hybrid.jpg' style='height:228mm; width:auto; display:block; margin:0 auto'><figcaption>Sürüm 1'in eğitimde kullanılmayan gerçek görüntülerdeki çıktısı: solda kamera ve bulunan kapılar (yeşil), ortada sınıf haritası, sağda göreli derinlik (kırmızı = yakın).</figcaption></figure>
+
+<h2 class='pb'>7. Bilinen sınırlar</h2>
+<ul><li><b>Kendi kameramız görülmedi.</b> Listedeki kamera IMX219; lens açısı bilinmiyor (standart sürüm yaklaşık 62°, simülasyon 130°). Bu sensör kareyi satır satır okur; hızlı uçuşta kapı eğik görünür ve eğitimde bu yok.</li>
+<li><b>Tek test yeri.</b> Kapı genellemesi tek bir görülmemiş yerde ölçüldü; sayılar tohumdan tohuma ±0.06 oynuyor.</li>
+<li><b>Yakın ve uzak kapılar</b> gerçek videoda zayıf (bölüm 3). Gerçek eğitim verisinde 0–1 köşesi görünen kapılar etiketsiz ve "kapı yok" sayılıyor.</li>
+<li><b>Orin'de</b> eğitilmiş modelin doğruluğu, kamera ve ön/son işlem süresi ölçülmedi.</li>
+<li><b>Bulanıklık, sis, karanlık</b> yalnızca simülasyon efektleriyle sınandı; en zor karışımda (30 m/s + karanlık + sis) simülasyonda bile kapı bulma yaklaşık %60.</li>
+<li><b>Kapalı döngü testi</b> basit: nokta kütle, kusursuz konum bilgisi, basit kontrolcü. 20 m/s üstü için daha iyi bir kontrolcü gerekiyor.</li>
+<li><b>Veri lisansları:</b> BDD100K, RUGD ve IDD-AW yalnızca araştırma / ticari olmayan kullanım; UAVid ve KITTI CC BY-NC-SA. Ticari kullanım düşünülürse bu kaynaklar çıkarılıp yeniden eğitilmeli.</li></ul>
+
+<h2>8. Sıradaki adımlar</h2>
+<table class='txt'><tr><th>Adım</th><th>Neye bağlı</th><th>Durum</th></tr><tr><td>Gerçek videodaki yakın kapılar için eğitim (kısmen görünen kapıda merkez tanımının düzeltilmesi)</td><td>–</td><td>Eğitim sürüyor (bigN_h)</td></tr><tr><td>Uzak kapılar için daha yüksek giriş çözünürlüğü; Orin'deki hız maliyetiyle birlikte</td><td>–</td><td>Sırada</td></tr><tr><td>Eğitimi kamera geometrisine uydurmak (görüş açısı, satır satır okuma)</td><td>IMX219 lens açısı</td><td>Bilgi bekleniyor</td></tr><tr><td>Orin'de eğitilmiş modelin hız ve doğruluk ölçümü</td><td>Orin'e erişim</td><td>Bekliyor</td></tr><tr><td>Kendi kameradan görüntüyle ölçüm, gerekirse kısa ince ayar; yakın geçişin gerçek görüntüyle doğrulanması</td><td>Kamera</td><td>Bekliyor</td></tr><tr><td>Yüksek hızda kapalı döngü testi</td><td>Takımın kontrolcüsü ya da daha iyi bir kontrolcü</td><td>Bekliyor</td></tr></table>
+
+<h2>Ek: eğitim verisi</h2>
+<table class='txt'><tr><th>Kaynak</th><th>Tür</th><th>Ne için</th></tr><tr><td>Simülasyon (kendi üretimimiz)</td><td>32.000 kare; ışık, sis, bulanıklık çeşitlemeleriyle</td><td>Kapı, sınıf haritası, derinlik (kusursuz etiket)</td></tr><tr><td>TII Racing</td><td>Gerçek, tek salon, yaklaşık 6.600 kare</td><td>Gerçek kapı köşeleri, kapısız kırpmalar</td></tr><tr><td>MonoRaceGate (red hariç)</td><td>Gerçek, 3 farklı yer</td><td>Gerçek kapı köşeleri</td></tr><tr><td>DIODE, SUN RGB-D</td><td>Gerçek, iç ve dış mekân</td><td>Derinlik, sınıf haritası</td></tr><tr><td>ADE20K, BDD100K</td><td>Gerçek, dış mekân ve yol; 3.000 + 7.000 kare</td><td>Sınıf haritası</td></tr><tr><td>Aeroscapes, UAVid</td><td>Gerçek, drone bakışı</td><td>Sınıf haritası</td></tr><tr><td>RUGD</td><td>Gerçek, arazi; 634 kare</td><td>Sınıf haritası</td></tr><tr><td>TuSimple</td><td>Gerçek, otoyol; 267 kare</td><td>Şerit çizgisi</td></tr></table>
+<p class='small'>Sözlük. <b>Ortalama kesişim oranı (mIoU):</b> her sınıf için tahmin ile etiketin örtüşme oranının ortalaması; 1 kusursuz. <b>Tohum:</b> eğitimin rastgele başlangıcı; aynı tarif farklı tohumla biraz farklı sonuç verir.
+<b>Kapı-kare:</b> bir karede görünen bir kapı. <b>Kapalı döngü:</b> modelin çıktısının drone'un hareketini, hareketin de bir sonraki görüntüyü belirlediği test.</p>
+</body></html>
