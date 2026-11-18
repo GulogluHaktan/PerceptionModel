@@ -1,0 +1,22 @@
+# environments and caches
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+# data, training outputs, checkpoints, logs (large; see README)
+data/
+runs/
+runs_*
+*.pt
+*.pth
+*.ckpt
+*.npy
+*.log
+# 3D asset catalogue: meshes (375 MB, generated) are not versioned, the small json metadata is
+assets/cars/**
+assets/generated/**
+assets/models/**
+!assets/cars/**/
+!assets/generated/**/
+!assets/models/**/
+!assets/**/*.json

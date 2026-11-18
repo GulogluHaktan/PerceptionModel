@@ -1,0 +1,16 @@
+# runtime dependencies (see requirements.lock for the exact versions used on the training workstation)
+torch
+torchvision
+timm
+transformers==4.57.*
+huggingface-hub>=0.34,<1.0
+accelerate
+einops
+open_clip_torch
+opencv-python-headless
+numpy
+pyyaml
+pillow
+tqdm
+pytest
+pyarrow

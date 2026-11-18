@@ -1,0 +1,63 @@
+{
+ "scene": {
+  "id": "bonsai",
+  "meters_per_unit": 0.14,
+  "up": [
+   0.07527,
+   -0.76543,
+   -0.63911
+  ],
+  "ground_z": -2.95
+ },
+ "objects": [
+  {
+   "type": "gate",
+   "pos": [
+    2.074,
+    0.134,
+    0.0
+   ],
+   "yaw_deg": 70,
+   "size": [
+    0.2,
+    0.17
+   ]
+  },
+  {
+   "type": "pole",
+   "pos": [
+    -1.6260000000000001,
+    1.4340000000000002,
+    0.0
+   ],
+   "size": [
+    0.008,
+    0.2
+   ]
+  }
+ ],
+ "trajectory": {
+  "kind": "spiral",
+  "frames": 90,
+  "fps": 30,
+  "max_speed_mps": 0.5,
+  "center": [
+   0.024,
+   0.075,
+   -0.369
+  ],
+  "radius_m": 0.519,
+  "altitude_m": -0.005
+ },
+ "camera": {
+  "width": 640,
+  "height": 427,
+  "hfov_deg": 51.63
+ },
+ "effects": {
+  "exposure_s": 0.01,
+  "iso": 400,
+  "vignette": 0.2
+ },
+ "seed": 3
+}

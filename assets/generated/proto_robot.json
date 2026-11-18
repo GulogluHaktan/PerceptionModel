@@ -1,0 +1,20 @@
+{
+ "name": "proto_robot",
+ "tag": "lamp",
+ "size_m_longest": 1.0,
+ "extent_m": [
+  1.0,
+  0.975,
+  0.764
+ ],
+ "faces": 161286,
+ "watertight": true,
+ "source_image": "/home/haktan/Projects/i23d/triposr/examples/robot.png",
+ "generator": "TripoSR (stabilityai/TripoSR, MIT)",
+ "marching_cubes_res": 256,
+ "peak_gpu_gb": 2.32,
+ "seconds": 7.5,
+ "up_axis": "Y",
+ "status": "rejected",
+ "note": "manual review 2026-11-13: TripoSR / bad-crop prototype, superseded by Hunyuan or poor quality"
+}

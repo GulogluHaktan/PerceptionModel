@@ -1,0 +1,19 @@
+{
+ "name": "hy_cat_car",
+ "tag": "car",
+ "size_m_longest": 4.5,
+ "extent_m": [
+  4.5,
+  2.536,
+  2.792
+ ],
+ "faces": 60000,
+ "watertight": true,
+ "source_image": "/tmp/claude-1000/-home-haktan-Projects-PerceptionModel/8b3a1328-c85a-4425-b944-3667c45da259/scratchpad/in/cat_car.png",
+ "generator": "Hunyuan3D-2mini-turbo (shape only, flat colour)",
+ "peak_gpu_gb": 4.35,
+ "seconds": 63.9,
+ "up_axis": "Y",
+ "status": "accepted",
+ "note": "manual review 2026-11-13: shape checked in views and in Isaac; flat colour; source = render of a catalogue asset"
+}

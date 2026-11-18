@@ -1,0 +1,1784 @@
+{
+ "tree_american_beech": {
+  "size_m": [
+   6.851,
+   6.706,
+   10.0
+  ],
+  "scale": 1.67384,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_black_oak": {
+  "size_m": [
+   12.88,
+   12.193,
+   10.0
+  ],
+  "scale": 0.50661,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_black_oak_fall": {
+  "size_m": [
+   12.88,
+   12.193,
+   10.0
+  ],
+  "scale": 0.50661,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_blue_berry_elder": {
+  "size_m": [
+   8.831,
+   8.214,
+   10.0
+  ],
+  "scale": 2.16134,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_chinese_juniper": {
+  "size_m": [
+   4.235,
+   4.167,
+   10.0
+  ],
+  "scale": 3.93048,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_colorado_spruce": {
+  "size_m": [
+   8.813,
+   9.268,
+   10.0
+  ],
+  "scale": 2.46277,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_common_apple": {
+  "size_m": [
+   10.486,
+   9.359,
+   10.0
+  ],
+  "scale": 1.78849,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_dogwood": {
+  "size_m": [
+   9.094,
+   8.83,
+   10.0
+  ],
+  "scale": 2.91789,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_douglas_fir": {
+  "size_m": [
+   5.016,
+   4.598,
+   10.0
+  ],
+  "scale": 1.6594,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_eastern_hemlock": {
+  "size_m": [
+   7.02,
+   6.632,
+   10.0
+  ],
+  "scale": 1.65957,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_elm_sapling": {
+  "size_m": [
+   5.643,
+   5.669,
+   10.0
+  ],
+  "scale": 3.23928,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_fraxinus": {
+  "size_m": [
+   9.083,
+   8.445,
+   10.0
+  ],
+  "scale": 1.87233,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_golden_chain": {
+  "size_m": [
+   8.69,
+   10.597,
+   10.0
+  ],
+  "scale": 1.78774,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_gray_birch": {
+  "size_m": [
+   8.019,
+   7.691,
+   10.0
+  ],
+  "scale": 3.001,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_gray_birch_fall": {
+  "size_m": [
+   8.019,
+   7.691,
+   10.0
+  ],
+  "scale": 3.001,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_hawthorn": {
+  "size_m": [
+   11.001,
+   8.364,
+   10.0
+  ],
+  "scale": 1.16133,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_honey_locust": {
+  "size_m": [
+   8.276,
+   8.529,
+   10.0
+  ],
+  "scale": 1.21977,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_honey_locust_fall": {
+  "size_m": [
+   8.276,
+   8.529,
+   10.0
+  ],
+  "scale": 1.21977,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_italian_cypress": {
+  "size_m": [
+   -6.805646932770577e+38,
+   -6.805646932770577e+38,
+   -6.805646932770577e+38
+  ],
+  "scale": 1.0,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": false
+ },
+ "tree_japanese_cherry": {
+  "size_m": [
+   10.529,
+   12.275,
+   10.0
+  ],
+  "scale": 2.15463,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_japanese_maple": {
+  "size_m": [
+   10.912,
+   13.697,
+   10.0
+  ],
+  "scale": 2.87618,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_japanese_maple_fall": {
+  "size_m": [
+   10.961,
+   13.875,
+   10.0
+  ],
+  "scale": 2.89332,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_kousa_dogwood": {
+  "size_m": [
+   12.127,
+   11.391,
+   10.0
+  ],
+  "scale": 3.49977,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_largetooth_aspen": {
+  "size_m": [
+   6.457,
+   6.585,
+   10.0
+  ],
+  "scale": 1.26745,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_lombardy_poplar": {
+  "size_m": [
+   3.539,
+   3.285,
+   10.0
+  ],
+  "scale": 0.73148,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_lombardy_poplar_fall": {
+  "size_m": [
+   3.539,
+   3.285,
+   10.0
+  ],
+  "scale": 0.73148,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_norway_spruce": {
+  "size_m": [
+   -6.805646932770577e+38,
+   -6.805646932770577e+38,
+   -6.805646932770577e+38
+  ],
+  "scale": 1.0,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": false
+ },
+ "tree_orange_tree": {
+  "size_m": [
+   9.522,
+   10.237,
+   10.0
+  ],
+  "scale": 2.51684,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_red_ash": {
+  "size_m": [
+   6.796,
+   7.179,
+   10.0
+  ],
+  "scale": 1.18553,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_red_ash_fall": {
+  "size_m": [
+   6.796,
+   7.179,
+   10.0
+  ],
+  "scale": 1.18553,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_red_cedar": {
+  "size_m": [
+   -6.805646932770577e+38,
+   -6.805646932770577e+38,
+   -6.805646932770577e+38
+  ],
+  "scale": 1.0,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": false
+ },
+ "tree_red_maple": {
+  "size_m": [
+   11.393,
+   10.574,
+   10.0
+  ],
+  "scale": 0.92218,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_red_oak": {
+  "size_m": [
+   11.309,
+   9.926,
+   10.0
+  ],
+  "scale": 0.46889,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_scarlet_oak": {
+  "size_m": [
+   8.162,
+   8.043,
+   10.0
+  ],
+  "scale": 0.78412,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_scarlet_oak_fall": {
+  "size_m": [
+   8.162,
+   8.043,
+   10.0
+  ],
+  "scale": 0.78412,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_service_berry": {
+  "size_m": [
+   8.885,
+   9.283,
+   10.0
+  ],
+  "scale": 1.09244,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_shumard_oak": {
+  "size_m": [
+   9.006,
+   9.151,
+   10.0
+  ],
+  "scale": 0.87431,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_shumard_oak_fall": {
+  "size_m": [
+   9.006,
+   9.151,
+   10.0
+  ],
+  "scale": 0.87431,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_siberian_crab_apple": {
+  "size_m": [
+   13.204,
+   13.015,
+   10.0
+  ],
+  "scale": 1.65748,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_sugar_maple": {
+  "size_m": [
+   7.018,
+   7.359,
+   10.0
+  ],
+  "scale": 0.76737,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_sycamore": {
+  "size_m": [
+   8.305,
+   9.093,
+   10.0
+  ],
+  "scale": 0.48447,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_white_ash": {
+  "size_m": [
+   7.97,
+   7.984,
+   10.0
+  ],
+  "scale": 1.04611,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_white_pine": {
+  "size_m": [
+   8.511,
+   9.035,
+   10.0
+  ],
+  "scale": 4.25585,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "tree_yellow_pine": {
+  "size_m": [
+   6.351,
+   6.684,
+   10.0
+  ],
+  "scale": 0.37045,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "palm_cuban_royal_palm": {
+  "size_m": [
+   -6.805646932770577e+38,
+   -6.805646932770577e+38,
+   -6.805646932770577e+38
+  ],
+  "scale": 1.0,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": false
+ },
+ "palm_fan_palm": {
+  "size_m": [
+   -6.805646932770577e+38,
+   -6.805646932770577e+38,
+   -6.805646932770577e+38
+  ],
+  "scale": 1.0,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": false
+ },
+ "palm_golden_malay_palm": {
+  "size_m": [
+   10.425,
+   10.379,
+   10.0
+  ],
+  "scale": 3.11818,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "palm_hurricane_palm": {
+  "size_m": [
+   10.961,
+   9.749,
+   10.0
+  ],
+  "scale": 2.67002,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "palm_travelers_palm": {
+  "size_m": [
+   13.462,
+   2.497,
+   10.0
+  ],
+  "scale": 2.54489,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "palm_windmill_palm": {
+  "size_m": [
+   8.833,
+   8.661,
+   10.0
+  ],
+  "scale": 4.12898,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "palm_australian_tree_fern": {
+  "size_m": [
+   -6.805646932770577e+38,
+   -6.805646932770577e+38,
+   -6.805646932770577e+38
+  ],
+  "scale": 1.0,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": false
+ },
+ "palm_buddha_belly_bamboo": {
+  "size_m": [
+   7.857,
+   6.201,
+   10.0
+  ],
+  "scale": 6.27795,
+  "nominal_height": 10.0,
+  "group": "tree",
+  "ok": true
+ },
+ "shrub_acacia": {
+  "size_m": [
+   1.623,
+   1.669,
+   1.19
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_barberry": {
+  "size_m": [
+   1.007,
+   0.997,
+   1.197
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_boxwood": {
+  "size_m": [
+   1.009,
+   1.012,
+   0.741
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_burning_bush": {
+  "size_m": [
+   2.642,
+   2.601,
+   1.604
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_cedar_shrub": {
+  "size_m": [
+   -6.805646932770577e+38,
+   -6.805646932770577e+38,
+   -6.805646932770577e+38
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": false
+ },
+ "shrub_daphne": {
+  "size_m": [
+   1.05,
+   1.07,
+   0.815
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_forsythia": {
+  "size_m": [
+   3.539,
+   3.65,
+   2.317
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_fraser_photina": {
+  "size_m": [
+   2.069,
+   2.108,
+   2.572
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_goldflame_spirea": {
+  "size_m": [
+   0.319,
+   0.312,
+   0.204
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_holly": {
+  "size_m": [
+   2.316,
+   2.378,
+   1.526
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_hydrangea": {
+  "size_m": [
+   1.567,
+   1.612,
+   1.39
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_juniper": {
+  "size_m": [
+   0.455,
+   0.451,
+   0.898
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_lilac": {
+  "size_m": [
+   1.908,
+   1.887,
+   2.429
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_magnolia": {
+  "size_m": [
+   0.614,
+   0.65,
+   1.014
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_oleander": {
+  "size_m": [
+   1.524,
+   1.597,
+   1.664
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_pampas_grass": {
+  "size_m": [
+   1.649,
+   1.617,
+   2.512
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_pearl_bush": {
+  "size_m": [
+   1.519,
+   1.534,
+   1.692
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_privet": {
+  "size_m": [
+   1.704,
+   1.638,
+   1.113
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_rhododendron": {
+  "size_m": [
+   2.547,
+   2.372,
+   2.013
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_sweet_mock_orange": {
+  "size_m": [
+   0.701,
+   0.677,
+   0.598
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_vibernum": {
+  "size_m": [
+   1.319,
+   1.276,
+   0.826
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "shrub_yew": {
+  "size_m": [
+   1.227,
+   1.235,
+   0.727
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "shrub",
+  "ok": true
+ },
+ "rock_small_01": {
+  "size_m": [
+   0.314,
+   0.302,
+   0.253
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_02": {
+  "size_m": [
+   0.237,
+   0.197,
+   0.162
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_03": {
+  "size_m": [
+   0.209,
+   0.186,
+   0.156
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_04": {
+  "size_m": [
+   0.212,
+   0.193,
+   0.169
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_05": {
+  "size_m": [
+   0.209,
+   0.149,
+   0.14
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_06": {
+  "size_m": [
+   0.209,
+   0.172,
+   0.127
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_07": {
+  "size_m": [
+   0.16,
+   0.122,
+   0.088
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_08": {
+  "size_m": [
+   0.223,
+   0.197,
+   0.162
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_09": {
+  "size_m": [
+   0.128,
+   0.113,
+   0.067
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_10": {
+  "size_m": [
+   0.162,
+   0.151,
+   0.116
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_11": {
+  "size_m": [
+   0.233,
+   0.147,
+   0.14
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_12": {
+  "size_m": [
+   0.228,
+   0.193,
+   0.142
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_13": {
+  "size_m": [
+   0.213,
+   0.14,
+   0.123
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_14": {
+  "size_m": [
+   0.203,
+   0.195,
+   0.146
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "rock_small_15": {
+  "size_m": [
+   0.228,
+   0.224,
+   0.173
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "rock",
+  "ok": true
+ },
+ "prop_bench_wrought_iron_02": {
+  "size_m": [
+   1.295,
+   0.858,
+   0.989
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_bike_rack_01": {
+  "size_m": [
+   1.827,
+   0.13,
+   1.073
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_concrete_block_02": {
+  "size_m": [
+   1.044,
+   1.05,
+   0.5
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_dumpster_blue_sm_01": {
+  "size_m": [
+   1.906,
+   1.244,
+   1.67
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_dumpster_lrg_01": {
+  "size_m": [
+   1.323,
+   2.209,
+   1.676
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_dumpster_lrg_02": {
+  "size_m": [
+   1.321,
+   2.209,
+   1.673
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_firehydrant01": {
+  "size_m": [
+   0.458,
+   0.403,
+   0.8
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_firehydrant04": {
+  "size_m": [
+   0.514,
+   0.456,
+   0.784
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_hydrant_03": {
+  "size_m": [
+   0.458,
+   0.403,
+   0.8
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_patio_umbrella_01": {
+  "size_m": [
+   2.314,
+   2.314,
+   2.681
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_planter_round_02": {
+  "size_m": [
+   0.706,
+   0.706,
+   0.773
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_safety_railing_01": {
+  "size_m": [
+   2.226,
+   0.073,
+   1.166
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_shopping_cart_corral_01": {
+  "size_m": [
+   2.006,
+   3.711,
+   2.376
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_table01": {
+  "size_m": [
+   0.811,
+   0.811,
+   0.64
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_trashcan_cylinder_01": {
+  "size_m": [
+   0.722,
+   0.722,
+   1.041
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_trashcan_square_01": {
+  "size_m": [
+   0.585,
+   0.796,
+   1.011
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_lamppost_double_01": {
+  "size_m": [
+   3.6,
+   0.7,
+   15.0
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "prop_lamppost_single_01": {
+  "size_m": [
+   1.978,
+   0.8,
+   15.0
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_01": {
+  "size_m": [
+   0.536,
+   0.536,
+   7.0
+  ],
+  "scale": 1.34028,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_02": {
+  "size_m": [
+   1.298,
+   0.679,
+   7.0
+  ],
+  "scale": 1.12469,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_03": {
+  "size_m": [
+   3.145,
+   0.738,
+   7.0
+  ],
+  "scale": 0.73796,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_04": {
+  "size_m": [
+   0.63,
+   1.704,
+   7.0
+  ],
+  "scale": 0.98977,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_05": {
+  "size_m": [
+   2.863,
+   0.347,
+   7.0
+  ],
+  "scale": 0.58412,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_06": {
+  "size_m": [
+   1.76,
+   0.86,
+   7.0
+  ],
+  "scale": 1.5583,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_08": {
+  "size_m": [
+   0.672,
+   2.581,
+   7.0
+  ],
+  "scale": 2.3894,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_pole_fxd_streetlamp_09": {
+  "size_m": [
+   0.415,
+   3.63,
+   7.0
+  ],
+  "scale": 0.7881,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_utility_pole_30ft_01": {
+  "size_m": [
+   0.185,
+   0.174,
+   7.0
+  ],
+  "scale": 0.63962,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_utility_pole_40ft_01": {
+  "size_m": [
+   0.145,
+   0.136,
+   7.0
+  ],
+  "scale": 0.50029,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_utility_pole_50ft_01": {
+  "size_m": [
+   0.119,
+   0.111,
+   7.0
+  ],
+  "scale": 0.4108,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_utility_pole_60ft_01": {
+  "size_m": [
+   0.101,
+   0.099,
+   7.0
+  ],
+  "scale": 0.34847,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_tel_pole_avg_reg_50ft_01": {
+  "size_m": [
+   0.463,
+   0.463,
+   7.0
+  ],
+  "scale": 0.40809,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_tel_pole_avg_tall_75ft_01": {
+  "size_m": [
+   0.516,
+   0.516,
+   7.0
+  ],
+  "scale": 0.28836,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_signal_pole_avg_tall_40ft_01": {
+  "size_m": [
+   0.446,
+   0.446,
+   7.0
+  ],
+  "scale": 0.57403,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_double_utility_pole_65ft": {
+  "size_m": [
+   1.655,
+   0.089,
+   7.0
+  ],
+  "scale": 0.3211,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_metal_cylinderpost_12ft": {
+  "size_m": [
+   0.129,
+   0.125,
+   7.0
+  ],
+  "scale": 1.76581,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "pole_streetlamp_modern_01_30ft": {
+  "size_m": [
+   0.399,
+   0.399,
+   7.0
+  ],
+  "scale": 0.72167,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "bldg_apt_complex": {
+  "size_m": [
+   190.682,
+   174.753,
+   16.592
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_01": {
+  "size_m": [
+   51.556,
+   29.885,
+   14.483
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_02": {
+  "size_m": [
+   36.026,
+   28.82,
+   14.454
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_03": {
+  "size_m": [
+   32.452,
+   35.245,
+   14.478
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_04": {
+  "size_m": [
+   72.003,
+   25.828,
+   13.123
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_05": {
+  "size_m": [
+   58.333,
+   33.705,
+   15.77
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_06": {
+  "size_m": [
+   49.587,
+   28.087,
+   15.968
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_07": {
+  "size_m": [
+   59.026,
+   36.431,
+   14.969
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_plaza_08": {
+  "size_m": [
+   135.717,
+   76.477,
+   21.203
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bldg_library": {
+  "size_m": [
+   54.071,
+   63.553,
+   12.596
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "building",
+  "ok": true
+ },
+ "bench_curved": {
+  "size_m": [
+   4.091,
+   2.17,
+   0.442
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "bollard": {
+  "size_m": [
+   0.139,
+   0.139,
+   1.003
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "concrete_block": {
+  "size_m": [
+   1.044,
+   1.05,
+   0.5
+  ],
+  "scale": 1.0,
+  "nominal_height": null,
+  "group": "prop",
+  "ok": true
+ },
+ "streetlamp": {
+  "size_m": [
+   0.298,
+   4.742,
+   7.0
+  ],
+  "scale": 0.47561,
+  "nominal_height": 7.0,
+  "group": "pole",
+  "ok": true
+ },
+ "car_smart_fortwo": {
+  "size_m": [
+   4.5,
+   2.902,
+   2.514
+  ],
+  "scale": 0.04245,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_hummer_h2": {
+  "size_m": [
+   2.433,
+   4.5,
+   2.133
+  ],
+  "scale": 0.86598,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_chevrolet_c10": {
+  "size_m": [
+   1.933,
+   4.5,
+   1.651
+  ],
+  "scale": 0.00925,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_mini_truck": {
+  "size_m": [
+   2.247,
+   4.5,
+   2.36
+  ],
+  "scale": 0.19984,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_car_gen_11_car_clean_cd23": {
+  "size_m": [
+   1.432,
+   4.5,
+   1.522
+  ],
+  "scale": 0.00735,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_car_laytonmobile_professor_layton_car_ci_35bf": {
+  "size_m": [
+   4.5,
+   1.815,
+   1.866
+  ],
+  "scale": 0.00118,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_jeep_jurassic_park_jeep_18_low_poly_d44f": {
+  "size_m": [
+   4.5,
+   4.5,
+   2.889
+  ],
+  "scale": 0.72626,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_jeep_red_expedition_uaz_hunter_01de": {
+  "size_m": [
+   4.5,
+   4.5,
+   0.783
+  ],
+  "scale": 0.00138,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_jeep_jeep_8dd9": {
+  "size_m": [
+   2.401,
+   4.5,
+   2.08
+  ],
+  "scale": 1.1305,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_minivan_ibishu_pigeon_399b": {
+  "size_m": [
+   2.027,
+   4.5,
+   2.022
+  ],
+  "scale": 1.36527,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_minivan_minivan_8f5a": {
+  "size_m": [
+   4.5,
+   2.615,
+   1.652
+  ],
+  "scale": 0.94072,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_pickup_truck_ford_model_b_pickup_3a50": {
+  "size_m": [
+   1.799,
+   4.5,
+   2.068
+  ],
+  "scale": 0.00727,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_pickup_truck_generic_japan_pickup_low_po_ca19": {
+  "size_m": [
+   4.5,
+   1.766,
+   1.462
+  ],
+  "scale": 0.02194,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_pickup_truck_lowpoly_ford_f100_no_textur_8168": {
+  "size_m": [
+   2.012,
+   4.5,
+   1.675
+  ],
+  "scale": 0.00971,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_truck_kamaz_bdc8": {
+  "size_m": [
+   4.5,
+   1.803,
+   1.918
+  ],
+  "scale": 0.00577,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_ambulance_old_ambulance_van_low_poly_mod_2856": {
+  "size_m": [
+   4.5,
+   1.952,
+   2.001
+  ],
+  "scale": 0.02109,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_ambulance_4_low_poly_toon_city_cars_cdce": {
+  "size_m": [
+   4.5,
+   2.968,
+   1.141
+  ],
+  "scale": 0.42123,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_bus_generic_town_bus_14fe": {
+  "size_m": [
+   4.5,
+   1.096,
+   1.114
+  ],
+  "scale": 0.03441,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_bus_hcr2_bus_2525": {
+  "size_m": [
+   2.622,
+   4.5,
+   2.712
+  ],
+  "scale": 0.93183,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_cab_old_taxicab_low_poly_model_9e8f": {
+  "size_m": [
+   4.5,
+   1.876,
+   1.543
+  ],
+  "scale": 0.02153,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_cab_2008_baird_silver_coronet_taxicab_d4c0": {
+  "size_m": [
+   1.801,
+   4.5,
+   1.623
+  ],
+  "scale": 0.00417,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_race_car_volkswagen_i_d_r_with_interior_109e": {
+  "size_m": [
+   2.041,
+   4.5,
+   0.922
+  ],
+  "scale": 0.27273,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ },
+ "car_school_bus_etalon_a079_bus_low_poly_easy_a1a4": {
+  "size_m": [
+   1.732,
+   4.5,
+   2.251
+  ],
+  "scale": 0.26389,
+  "nominal_height": null,
+  "group": "car",
+  "ok": true
+ }
+}

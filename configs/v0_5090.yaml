@@ -1,0 +1,26 @@
+# First real run on the 5090 (run twice: student vit, then hybrid; same recipe, pick by measurement - D1).
+student: vit            # vit | hybrid
+hybrid_name: fastvit_sa24   # timm hybrid; try fastvit_sa36 / efficientvit_b2 for a bigger Orin student
+images: data/images     # produced by scripts/fetch_data.py (+ your own images later)
+labels: data/labels     # produced by scripts/label_folder.py (GroundingDINO + SAM2 pseudo labels)
+cache: data/cache       # teacher feature cache, about 1.2 MB/img at 448 for dino+depth
+golden: data/golden     # frozen hand-labelled set; remove this line until it exists (gate then has no metrics)
+out_dir: runs/v0
+size: 448               # ViT-B at 448 -> 28x28 tokens
+teachers:
+  - {name: dino, kind: dinov2, weight: 1.0}
+  - {name: depth, kind: depth_da2}
+  # Heavy unified teacher (390M, 1536-d, +2.4 MB/img at 448 -> cache at size 224 or on a subset):
+  # - {name: eradio, kind: eradio, weight: 1.0}
+batch: 32
+epochs: 20
+lr: 2.0e-4
+workers: 8
+pretrained: true        # ImageNet-initialised student; false = from scratch
+depth_weight: 1.0
+seg_weight: 1.0
+corner_weight: 5.0
+# Gate floors (decision 9): PLACEHOLDERS until the first golden-set numbers exist. Edit then.
+gate:
+  floors: {seg_miou: 0.0, depth_absrel_max: 1.0}
+  max_regress: 0.02

@@ -1,0 +1,22 @@
+batch: 8
+cache: data/factory2/cache448
+corner_weight: 5.0
+epochs: 1
+gate:
+  max_regress: 1.0
+  max_total_regress: 1.0
+golden: data/f2_gold_clear/golden
+images: data/factory2/images
+labels: data/factory2/labels
+lr: 0.0003
+out_dir: runs/cache_only2
+pretrained: true
+seg_weight: 1.0
+size: 448
+student: hybrid
+teachers:
+- kind: dinov2
+  name: dino
+- kind: depth_da2
+  name: depth
+workers: 2

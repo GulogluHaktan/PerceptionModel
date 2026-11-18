@@ -1,0 +1,20 @@
+{
+ "name": "gen_cat_chair",
+ "tag": "chair",
+ "size_m_longest": 0.9,
+ "extent_m": [
+  0.725,
+  0.9,
+  0.752
+ ],
+ "faces": 132336,
+ "watertight": true,
+ "source_image": "/tmp/claude-1000/-home-haktan-Projects-PerceptionModel/8b3a1328-c85a-4425-b944-3667c45da259/scratchpad/in/cat_chair.png",
+ "generator": "TripoSR (stabilityai/TripoSR, MIT)",
+ "marching_cubes_res": 256,
+ "peak_gpu_gb": 2.32,
+ "seconds": 124.6,
+ "up_axis": "Y",
+ "status": "rejected",
+ "note": "manual review 2026-11-13: TripoSR / bad-crop prototype, superseded by Hunyuan or poor quality"
+}

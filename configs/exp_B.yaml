@@ -1,0 +1,20 @@
+batch: 8
+cache: data/factory/cache
+corner_weight: 5.0
+epochs: 14
+golden: data/factory/golden
+images: data/exp_B/images
+labels: data/factory/labels
+lr: 0.0003
+out_dir: runs/exp_B
+pretrained: true
+seed: 0
+seg_weight: 1.0
+size: 224
+student: hybrid
+teachers:
+- kind: dinov2
+  name: dino
+- kind: depth_da2
+  name: depth
+workers: 2

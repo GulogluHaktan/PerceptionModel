@@ -1,0 +1,250 @@
+{
+ "bldg_plaza_03": {
+  "samples_px": 3969,
+  "labelled_frac": 1.0
+ },
+ "bldg_plaza_02": {
+  "samples_px": 9786,
+  "labelled_frac": 1.0
+ },
+ "palm_golden_malay_palm": {
+  "samples_px": 4248,
+  "labelled_frac": 1.0
+ },
+ "tree_american_beech": {
+  "samples_px": 5645,
+  "labelled_frac": 0.997
+ },
+ "tree_sugar_maple": {
+  "samples_px": 5338,
+  "labelled_frac": 0.003
+ },
+ "tree_orange_tree": {
+  "samples_px": 3446,
+  "labelled_frac": 1.0
+ },
+ "palm_windmill_palm": {
+  "samples_px": 6116,
+  "labelled_frac": 1.0
+ },
+ "tree_honey_locust": {
+  "samples_px": 3374,
+  "labelled_frac": 0.199
+ },
+ "palm_travelers_palm": {
+  "samples_px": 4790,
+  "labelled_frac": 1.0
+ },
+ "tree_red_ash": {
+  "samples_px": 4953,
+  "labelled_frac": 0.031
+ },
+ "tree_white_ash": {
+  "samples_px": 6740,
+  "labelled_frac": 0.065
+ },
+ "prop_table01": {
+  "samples_px": 2312,
+  "labelled_frac": 0.754
+ },
+ "car_smart_fortwo": {
+  "samples_px": 7396,
+  "labelled_frac": 1.0
+ },
+ "car_ambulance_old_ambulance_van_low_poly_mod_2856": {
+  "samples_px": 8258,
+  "labelled_frac": 1.0
+ },
+ "car_race_car_volkswagen_i_d_r_with_interior_109e": {
+  "samples_px": 4041,
+  "labelled_frac": 1.0
+ },
+ "car_pickup_truck_lowpoly_ford_f100_no_textur_8168": {
+  "samples_px": 1019,
+  "labelled_frac": 1.0
+ },
+ "bldg_plaza_06": {
+  "samples_px": 1944,
+  "labelled_frac": 1.0
+ },
+ "pole_tel_pole_avg_tall_75ft_01": {
+  "samples_px": 494,
+  "labelled_frac": 1.0
+ },
+ "prop_patio_umbrella_01": {
+  "samples_px": 603,
+  "labelled_frac": 0.297
+ },
+ "tree_elm_sapling": {
+  "samples_px": 4907,
+  "labelled_frac": 1.0
+ },
+ "pole_double_utility_pole_65ft": {
+  "samples_px": 321,
+  "labelled_frac": 0.0
+ },
+ "tree_red_ash_fall": {
+  "samples_px": 558,
+  "labelled_frac": 0.016
+ },
+ "tree_kousa_dogwood": {
+  "samples_px": 2835,
+  "labelled_frac": 1.0
+ },
+ "bldg_plaza_01": {
+  "samples_px": 1755,
+  "labelled_frac": 1.0
+ },
+ "tree_blue_berry_elder": {
+  "samples_px": 722,
+  "labelled_frac": 0.976
+ },
+ "tree_japanese_cherry": {
+  "samples_px": 847,
+  "labelled_frac": 1.0
+ },
+ "tree_hawthorn": {
+  "samples_px": 1456,
+  "labelled_frac": 1.0
+ },
+ "car_truck_kamaz_bdc8": {
+  "samples_px": 3241,
+  "labelled_frac": 1.0
+ },
+ "tree_dogwood": {
+  "samples_px": 6152,
+  "labelled_frac": 1.0
+ },
+ "prop_trashcan_square_01": {
+  "samples_px": 417,
+  "labelled_frac": 0.065
+ },
+ "tree_black_oak_fall": {
+  "samples_px": 342,
+  "labelled_frac": 0.278
+ },
+ "tree_red_maple": {
+  "samples_px": 2652,
+  "labelled_frac": 0.011
+ },
+ "car_cab_old_taxicab_low_poly_model_9e8f": {
+  "samples_px": 1994,
+  "labelled_frac": 1.0
+ },
+ "car_ambulance_4_low_poly_toon_city_cars_cdce": {
+  "samples_px": 5675,
+  "labelled_frac": 1.0
+ },
+ "tree_shumard_oak": {
+  "samples_px": 2264,
+  "labelled_frac": 0.074
+ },
+ "bldg_library": {
+  "samples_px": 1681,
+  "labelled_frac": 1.0
+ },
+ "tree_service_berry": {
+  "samples_px": 1021,
+  "labelled_frac": 0.017
+ },
+ "tree_gray_birch": {
+  "samples_px": 1049,
+  "labelled_frac": 1.0
+ },
+ "tree_siberian_crab_apple": {
+  "samples_px": 10787,
+  "labelled_frac": 1.0
+ },
+ "tree_largetooth_aspen": {
+  "samples_px": 5033,
+  "labelled_frac": 1.0
+ },
+ "tree_yellow_pine": {
+  "samples_px": 3087,
+  "labelled_frac": 0.121
+ },
+ "tree_douglas_fir": {
+  "samples_px": 1716,
+  "labelled_frac": 0.153
+ },
+ "tree_shumard_oak_fall": {
+  "samples_px": 1700,
+  "labelled_frac": 0.132
+ },
+ "car_jeep_jurassic_park_jeep_18_low_poly_d44f": {
+  "samples_px": 893,
+  "labelled_frac": 1.0
+ },
+ "car_chevrolet_c10": {
+  "samples_px": 1779,
+  "labelled_frac": 1.0
+ },
+ "car_minivan_ibishu_pigeon_399b": {
+  "samples_px": 890,
+  "labelled_frac": 1.0
+ },
+ "car_pickup_truck_ford_model_b_pickup_3a50": {
+  "samples_px": 258,
+  "labelled_frac": 1.0
+ },
+ "bldg_plaza_05": {
+  "samples_px": 324,
+  "labelled_frac": 1.0
+ },
+ "prop_dumpster_blue_sm_01": {
+  "samples_px": 495,
+  "labelled_frac": 0.154
+ },
+ "tree_chinese_juniper": {
+  "samples_px": 5328,
+  "labelled_frac": 0.002
+ },
+ "tree_scarlet_oak_fall": {
+  "samples_px": 745,
+  "labelled_frac": 0.054
+ },
+ "tree_red_oak": {
+  "samples_px": 2395,
+  "labelled_frac": 0.113
+ },
+ "prop_hydrant_03": {
+  "samples_px": 2202,
+  "labelled_frac": 0.849
+ },
+ "car_school_bus_etalon_a079_bus_low_poly_easy_a1a4": {
+  "samples_px": 2812,
+  "labelled_frac": 1.0
+ },
+ "car_car_gen_11_car_clean_cd23": {
+  "samples_px": 982,
+  "labelled_frac": 1.0
+ },
+ "bldg_plaza_07": {
+  "samples_px": 1330,
+  "labelled_frac": 1.0
+ },
+ "tree_scarlet_oak": {
+  "samples_px": 456,
+  "labelled_frac": 0.05
+ },
+ "tree_colorado_spruce": {
+  "samples_px": 989,
+  "labelled_frac": 0.042
+ },
+ "tree_honey_locust_fall": {
+  "samples_px": 1343,
+  "labelled_frac": 0.164
+ },
+ "car_cab_2008_baird_silver_coronet_taxicab_d4c0": {
+  "samples_px": 824,
+  "labelled_frac": 1.0
+ },
+ "tree_lombardy_poplar": {
+  "samples_px": 394,
+  "labelled_frac": 1.0
+ },
+ "tree_japanese_maple_fall": {
+  "samples_px": 351,
+  "labelled_frac": 1.0
+ }
+}

@@ -1,0 +1,19 @@
+{
+ "name": "hy_cat_desk",
+ "tag": "desk",
+ "size_m_longest": 1.4,
+ "extent_m": [
+  0.643,
+  1.01,
+  1.4
+ ],
+ "faces": 60000,
+ "watertight": true,
+ "source_image": "/tmp/claude-1000/-home-haktan-Projects-PerceptionModel/8b3a1328-c85a-4425-b944-3667c45da259/scratchpad/in/cat_desk.png",
+ "generator": "Hunyuan3D-2mini-turbo (shape only, flat colour)",
+ "peak_gpu_gb": 4.35,
+ "seconds": 68.4,
+ "up_axis": "Y",
+ "status": "accepted",
+ "note": "manual review 2026-11-13: shape checked in views and in Isaac; flat colour; source = render of a catalogue asset"
+}

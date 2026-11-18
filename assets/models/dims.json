@@ -1,0 +1,347 @@
+{
+ "car_smart_fortwo": [
+  4.495,
+  2.899,
+  2.511
+ ],
+ "car_hummer_h2": [
+  2.433,
+  4.503,
+  2.13
+ ],
+ "car_chevrolet_c10": [
+  1.943,
+  4.523,
+  1.66
+ ],
+ "car_mini_truck": [
+  2.246,
+  4.499,
+  2.36
+ ],
+ "car_car_gen_11_car_clean_cd23": [
+  1.422,
+  4.471,
+  1.512
+ ],
+ "car_car_laytonmobile_professor_layton_car_ci_35bf": [
+  4.586,
+  1.85,
+  1.902
+ ],
+ "car_jeep_jurassic_park_jeep_18_low_poly_d44f": [
+  4.003,
+  4.003,
+  2.569
+ ],
+ "car_jeep_red_expedition_uaz_hunter_01de": [
+  3.907,
+  3.907,
+  0.68
+ ],
+ "car_jeep_jeep_8dd9": [
+  2.13,
+  4.0,
+  1.849
+ ],
+ "car_minivan_ibishu_pigeon_399b": [
+  2.065,
+  4.605,
+  2.065
+ ],
+ "car_minivan_minivan_8f5a": [
+  4.596,
+  2.673,
+  1.692
+ ],
+ "car_pickup_truck_ford_model_b_pickup_3a50": [
+  2.005,
+  5.016,
+  2.305
+ ],
+ "car_pickup_truck_generic_japan_pickup_low_po_ca19": [
+  5.004,
+  1.963,
+  1.626
+ ],
+ "car_pickup_truck_lowpoly_ford_f100_no_textur_8168": [
+  2.238,
+  5.008,
+  1.864
+ ],
+ "car_truck_kamaz_bdc8": [
+  7.482,
+  2.998,
+  3.189
+ ],
+ "car_ambulance_old_ambulance_van_low_poly_mod_2856": [
+  5.504,
+  2.388,
+  2.447
+ ],
+ "car_ambulance_4_low_poly_toon_city_cars_cdce": [
+  5.498,
+  3.629,
+  1.395
+ ],
+ "car_bus_generic_town_bus_14fe": [
+  10.998,
+  2.679,
+  2.721
+ ],
+ "car_bus_hcr2_bus_2525": [
+  6.401,
+  11.002,
+  6.628
+ ],
+ "car_cab_old_taxicab_low_poly_model_9e8f": [
+  4.493,
+  1.873,
+  1.541
+ ],
+ "car_cab_2008_baird_silver_coronet_taxicab_d4c0": [
+  1.813,
+  4.53,
+  1.634
+ ],
+ "car_race_car_volkswagen_i_d_r_with_interior_109e": [
+  1.995,
+  4.401,
+  0.901
+ ],
+ "car_school_bus_etalon_a079_bus_low_poly_easy_a1a4": [
+  3.847,
+  9.998,
+  5.002
+ ],
+ "aircraft_airplane_tu154_dca4": [
+  14.001,
+  11.008,
+  3.394
+ ],
+ "aircraft_airplane_bristol175_5fb1": [
+  3.657,
+  12.583,
+  14.0
+ ],
+ "aircraft_helicopter_helicopter_9136": [
+  11.02,
+  10.578,
+  4.417
+ ],
+ "aircraft_helicopter_trotter_fly_chopper_copter_e79a": [
+  10.997,
+  9.613,
+  4.265
+ ],
+ "two_wheeler_bicycle_bike_ardis_verona_28_99d6": [
+  0.622,
+  1.801,
+  1.175
+ ],
+ "two_wheeler_bicycle_bike_steampunk_76e5": [
+  1.798,
+  0.872,
+  1.274
+ ],
+ "two_wheeler_bicycle_old_bicycle_17ab": [
+  1.8,
+  0.41,
+  0.981
+ ],
+ "two_wheeler_motor_scooter_honda_squash_70c5": [
+  1.799,
+  0.996,
+  1.305
+ ],
+ "two_wheeler_motor_scooter_hcr2_scooter_1052": [
+  0.613,
+  1.8,
+  1.159
+ ],
+ "two_wheeler_motorcycle_motorcycle_3840": [
+  1.165,
+  2.202,
+  1.721
+ ],
+ "indoor_chair_country_style_chair_d601": [
+  0.621,
+  0.641,
+  0.9
+ ],
+ "indoor_chair_old_chair_0723": [
+  0.675,
+  0.708,
+  0.897
+ ],
+ "indoor_armchair_old_sofa_09ee": [
+  0.6,
+  0.75,
+  0.875
+ ],
+ "indoor_armchair_purple_armchair_f7f9": [
+  0.9,
+  0.683,
+  0.817
+ ],
+ "indoor_sofa_pink_sofa_5ec9": [
+  1.992,
+  1.326,
+  0.599
+ ],
+ "indoor_sofa_arno_blush_velvet_sofa_hp_ef38": [
+  2.0,
+  0.91,
+  0.71
+ ],
+ "indoor_sofa_corner_sofa_9cef": [
+  1.999,
+  1.334,
+  0.505
+ ],
+ "indoor_table_teatime_table_c66c": [
+  1.4,
+  1.4,
+  0.32
+ ],
+ "indoor_table_desk_1_0fd1": [
+  1.4,
+  0.8,
+  0.75
+ ],
+ "indoor_table_12_9e19": [
+  0.654,
+  1.399,
+  0.398
+ ],
+ "indoor_desk_old_simple_desk_23fa": [
+  0.838,
+  1.4,
+  0.957
+ ],
+ "indoor_desk_computer_desk_c67f": [
+  1.175,
+  1.4,
+  0.977
+ ],
+ "indoor_bed_messy_bed_2_0_with_wall_mounted_back_a2b2": [
+  2.0,
+  1.744,
+  0.847
+ ],
+ "indoor_bed_single_bed_2_81ad": [
+  0.96,
+  1.999,
+  0.966
+ ],
+ "indoor_bed_princess_bed_3ed4": [
+  1.751,
+  1.994,
+  1.513
+ ],
+ "indoor_bookcase_dusty_old_bookshelf_free_6c5a": [
+  0.796,
+  0.338,
+  1.8
+ ],
+ "indoor_bookcase_simple_book_shelf_free_agustin_51d9": [
+  1.084,
+  0.379,
+  1.797
+ ],
+ "indoor_cabinet_antique_wardrobe_free_3949": [
+  1.081,
+  1.355,
+  1.796
+ ],
+ "indoor_cabinet_antique_wardrobe_9e19": [
+  0.538,
+  0.89,
+  1.799
+ ],
+ "indoor_refrigerator_fridge_stylized_gameready_f57b": [
+  1.009,
+  0.764,
+  1.802
+ ],
+ "indoor_refrigerator_ussr_fridge_5a0b": [
+  1.458,
+  1.66,
+  1.795
+ ],
+ "indoor_television_set_old_tv_cc3f": [
+  0.732,
+  0.453,
+  0.808
+ ],
+ "indoor_television_set_vintage_tv_free_ed92": [
+  0.637,
+  0.353,
+  0.804
+ ],
+ "indoor_lamp_wall_lamp_f93b": [
+  1.472,
+  1.502,
+  0.481
+ ],
+ "indoor_lamp_floor_lamp_33eb": [
+  0.39,
+  0.39,
+  1.5
+ ],
+ "indoor_toilet_dirty_toilet_389d": [
+  0.623,
+  0.399,
+  0.7
+ ],
+ "indoor_sink_sink_ce1a": [
+  0.6,
+  0.441,
+  0.507
+ ],
+ "indoor_stove_stove_7c5c": [
+  0.744,
+  0.62,
+  0.909
+ ],
+ "indoor_microwave_oven_microwave_xyz_school_home_6e4c": [
+  0.481,
+  0.465,
+  0.356
+ ],
+ "indoor_flowerpot_flower_c133": [
+  0.37,
+  0.407,
+  0.5
+ ],
+ "indoor_flowerpot_flower_4ae7": [
+  0.35,
+  0.379,
+  0.502
+ ],
+ "indoor_wardrobe_warn_wardrobe_b3a9": [
+  1.059,
+  0.46,
+  1.897
+ ],
+ "indoor_dresser_antique_dresser_0a46": [
+  0.548,
+  0.856,
+  0.999
+ ],
+ "indoor_stool_piano_stool_3d_scan_b65f": [
+  0.498,
+  0.362,
+  0.385
+ ],
+ "indoor_stool_antique_piano_stool_with_crystal_c_8ab0": [
+  0.412,
+  0.286,
+  0.5
+ ],
+ "indoor_ladder_ski_fi_ladder_game_asset_e00c": [
+  1.101,
+  2.001,
+  1.993
+ ]
+}
