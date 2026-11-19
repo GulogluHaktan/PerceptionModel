@@ -20,14 +20,14 @@ def normalize(x):
 class ImageFolder(Dataset):
     """Recursively reads images. id = relative path with '/' -> '__' and no suffix."""
 
-    def __init__(self, root, size=224):
+    def __init__(self, root, size=224, exclude=()):
         self.root, self.size = Path(root), size
         bad = set()
         bf = self.root / "bad_files.txt"      # written by scripts/check_images.py
         if bf.exists():
             bad = set(bf.read_text().splitlines())
         self.files = sorted(p for p in self.root.rglob("*")
-                            if p.suffix.lower() in EXT and str(p.relative_to(self.root)) not in bad)
+                            if p.suffix.lower() in EXT and str(p.relative_to(self.root)) not in bad and p.relative_to(self.root).parts[0] not in exclude)      # exclude: top-level set folders left out (config key exclude_sets)
         if not self.files:
             raise FileNotFoundError(f"no images under {root}")
         ids = [self.sid(p) for p in self.files]
@@ -60,7 +60,7 @@ class GoldenSet(Dataset):
     """Frozen hand-labelled set. Layout: images/<id>.jpg, seg/<id>.png (class idx),
     depth/<id>.npy (optional, metric or relative). Never trained on (D6/D8)."""
 
-    def __init__(self, root, size=224):
+    def __init__(self, root, size=224, exclude=()):
         self.root, self.size = Path(root), size
         self.ids = sorted(p.stem for p in (self.root / "images").glob("*") if p.suffix.lower() in EXT)
 

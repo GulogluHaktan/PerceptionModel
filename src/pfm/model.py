@@ -112,6 +112,8 @@ class DenseHeads(nn.Module):
             layers = [nn.Conv2d(in_dim, in_dim, 3, padding=1), nn.GELU(), nn.Conv2d(in_dim, in_dim, 3, padding=1), nn.GELU(), nn.Conv2d(in_dim, 9 * self.gdet_levels, 1)]
             if os.environ.get("PFM_GDET_STRIDE", "8") == "4":     # finer grid: far gates seen through each other collide less often in one cell
                 layers = [nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False)] + layers
+            elif os.environ.get("PFM_GDET_STRIDE", "8") == "2":   # stride 2: 224 x 224 output at 448 input (corner offsets regressed from a 4x finer grid)
+                layers = [nn.Upsample(scale_factor=4, mode="bilinear", align_corners=False)] + layers
             self.gdet = nn.Sequential(*layers)
             nn.init.constant_(self.gdet[-1].bias[::9], -2.19)
 

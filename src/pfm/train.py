@@ -323,7 +323,7 @@ def run(cfg_path):
     dev = "cuda" if torch.cuda.is_available() else "cpu"
     torch.manual_seed(cfg.get("seed", 0)); random.seed(cfg.get("seed", 0))
 
-    images = ImageFolder(cfg["images"], cfg["size"])
+    images = ImageFolder(cfg["images"], cfg["size"], exclude=tuple(cfg.get("exclude_sets", ())))
     cache = FeatureCache(cfg["cache"])
     cache.check_size(cfg["size"])
     feat_teachers = [t for t in cfg["teachers"] if not t["kind"].endswith("depth") and t["kind"] != "depth_da2"]
@@ -399,7 +399,7 @@ def run(cfg_path):
             if cfg.get("slot_weight", 1.0) > 0 and has_s.any():
                 hs = has_s.to(dev); loss = loss + cfg.get("slot_weight", 1.0) * slot_loss(out.get("slots_mlp", out["slots"]).float()[hs], slots_t.to(dev)[hs])
                 if "gdet" in out:
-                    loss = loss + cfg.get("gdet_weight", 1.0) * gdet_loss(out["gdet"].float()[hs], g_heat.to(dev)[hs], g_off.to(dev)[hs])
+                    loss = loss + cfg.get("gdet_weight", 1.0) * gdet_loss(out["gdet"].float()[hs], g_heat.to(dev)[hs], g_off.to(dev)[hs], off_weight=float(cfg.get("gdet_off_weight", 10.0)))
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
