@@ -164,6 +164,8 @@ P_CAM = float(os.environ.get("P_CAM", "0")); CAMP = {"train": [], "val": []}
 if P_CAM > 0:
     _sp = json.loads(Path("data/general/train/cam_split_%s.json" % ("out" if os.environ.get("CLASSSET") == "out" else "in")).read_text()); _ld = Path("data/general/train") / ("labels_cam_out" if os.environ.get("CLASSSET") == "out" else "labels_cam_in")
     CAMP = {k: [(Path("data/general/train/images/cam") / f"{n}.jpg", _ld / f"{n}.png") for n in v] for k, v in _sp.items()}
+    if os.environ.get("CAM_TRAIN_LABELS"):     # e.g. labels_cam_out_cb (class-balanced thresholds) for TRAIN frames only; val keeps the standard labels
+        CAMP["train"] = [(ip, Path("data/general/train") / os.environ["CAM_TRAIN_LABELS"] / lp.name) for ip, lp in CAMP["train"]]
     # rare-class oversampling: frame weight = sum over its classes (>= 0.5 % of its pixels) of (1 / class pixel share) ** 0.5
     _h = []
     for _, lp in CAMP["train"]:
