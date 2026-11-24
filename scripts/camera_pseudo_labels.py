@@ -36,8 +36,11 @@ def teach(m, x, A=None):
         return lab, conf
 
 
-split = {"train": [], "val": []}
+sp_path = T / "cam_split.json"                        # merge with earlier rounds (new recordings are appended, done names skipped)
+split = json.loads(sp_path.read_text()) if sp_path.exists() else {"train": [], "val": []}
+done_names = set(split["train"]) | set(split["val"])
 for f in sorted(SRC.glob("*.npy")):
+    if f"{f.stem}_00000" in done_names: print(f.stem, "already labelled", flush=True); continue
     stack = np.load(f, mmap_mode="r"); rot = 180 if "rot180" in f.stem else 0
     isp = raw_isp.RawISP(grid=grid, rotate=rot) if "rotate" in raw_isp.RawISP.__init__.__code__.co_varnames else raw_isp.RawISP(grid=grid)
     if rot and "rotate" not in raw_isp.RawISP.__init__.__code__.co_varnames: isp.rotate = rot
@@ -52,4 +55,4 @@ for f in sorted(SRC.glob("*.npy")):
             Image.fromarray(lab.byte().cpu().numpy()).save(d / f"{name}.png")
         split["val" if k >= n - nv else "train"].append(name)
     print(f.stem, n, "frames", flush=True)
-(T / "cam_split.json").write_text(json.dumps(split)); print("train", len(split["train"]), "val", len(split["val"]))
+sp_path.write_text(json.dumps(split)); print("train", len(split["train"]), "val", len(split["val"]))
