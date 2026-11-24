@@ -174,3 +174,51 @@ def velocity_from_poses(c2w_a, c2w_b, dt):
     axis = np.array([r_rel[2, 1] - r_rel[1, 2], r_rel[0, 2] - r_rel[2, 0], r_rel[1, 0] - r_rel[0, 1]])
     w = axis / (2 * math.sin(ang)) * ang / dt if ang > 1e-6 else np.zeros(3)
     return tuple(a[:3, :3].T @ v_world), tuple(w)
+
+
+def _gauss_blur(x, sigma):
+    k = int(2 * round(3 * sigma) + 1); t = torch.arange(k, device=x.device, dtype=x.dtype) - k // 2; w = torch.exp(-t ** 2 / (2 * sigma ** 2)); w = w / w.sum()
+    C = x.shape[1]; x = F.conv2d(F.pad(x, (k // 2, k // 2, 0, 0), mode="reflect"), w.view(1, 1, 1, k).repeat(C, 1, 1, 1), groups=C)
+    return F.conv2d(F.pad(x, (0, 0, k // 2, k // 2), mode="reflect"), w.view(1, 1, k, 1).repeat(C, 1, 1, 1), groups=C)
+
+
+LAMP_COLOURS = {"sodium": (1.0, 0.62, 0.28), "led": (0.92, 0.96, 1.0), "halogen": (1.0, 0.85, 0.65)}
+
+
+def night_real(img, inv_depth, gen, rng, strength=1.0):
+    """Realistic night from a daytime frame (single image, (1,3,H,W) in [0,1]); the uniform-darkening `sensor` night is not what a real
+    night camera sees. Model, in linear light:
+      ambient moonlight / city glow (very dark, blue or orange cast; sky darker still) + artificial lights that relight the scene:
+      vehicle headlights (cone from the bottom centre, falloff with depth from the inverse-depth map) and street lamps (sodium / LED pools
+      with their own colour, a visible light source and glare), a few distant car / tail lights near the horizon, low-light desaturation,
+      then camera auto-exposure (mean brightness target as in real night frames) and high-ISO shot + read noise.
+    inv_depth: (H,W) relative inverse depth (bigger = nearer), e.g. the core's depth head. rng: numpy Generator; gen: torch Generator."""
+    _, _, H, W = img.shape; dev = img.device; s = float(strength)
+    lin = img.clamp(0, 1) ** 2.2
+    inv = inv_depth.float(); inv = (inv - inv.min()) / (inv.max() - inv.min() + 1e-6)          # 0 far .. 1 near
+    yy = torch.linspace(0, 1, H, device=dev)[:, None].expand(H, W); xx = torch.linspace(0, 1, W, device=dev)[None, :].expand(H, W)
+    lum = img.mean(1)[0]; sky = (((inv < torch.quantile(inv, 0.2)) | (lum > 0.55)) * (yy < 0.6)).float() * (1 - ((yy - 0.45) / 0.15).clamp(0, 1)); sky = _gauss_blur(sky[None, None], 2.0)[0, 0]
+    amb_col = torch.tensor([(0.55, 0.65, 1.0), (1.0, 0.75, 0.5)][int(rng.integers(2))], device=dev).view(3, 1, 1)
+    illum = amb_col * 2.0 ** (-rng.uniform(8.5, 11.0) * s) * (1 - 0.995 * sky)                    # ambient, relative to daylight
+    if rng.random() < 0.85:                                                                        # own headlights: cone, ~1/d^2 on the ground
+        cx = 0.5 + rng.normal(0, 0.04); cone = torch.exp(-((xx - cx) / (0.18 + 0.5 * (1 - yy))) ** 2) * (yy > 0.35).float()
+        illum = illum + torch.tensor(LAMP_COLOURS["halogen"], device=dev).view(3, 1, 1) * (rng.uniform(0.3, 1.0) * inv ** 2 * cone)
+    srcs = torch.zeros(3, H, W, device=dev)
+    for _ in range(int(rng.integers(0, 6))):                                                       # street lamps: pool of light + the lamp itself
+        col = torch.tensor(LAMP_COLOURS["sodium" if rng.random() < 0.55 else "led"], device=dev).view(3, 1, 1)
+        lx, ly = rng.uniform(0.05, 0.95), rng.uniform(0.05, 0.45); r = rng.uniform(0.08, 0.3)
+        pool = torch.exp(-(((xx - lx) / r) ** 2 + ((yy - ly - 0.25) / (1.4 * r)) ** 2)); illum = illum + col * rng.uniform(0.05, 0.4) * pool * (1 - 0.98 * sky)
+        srcs = srcs + col * 4.0 * torch.exp(-(((xx - lx) * W) ** 2 + ((yy - ly) * H) ** 2) / (2 * (rng.uniform(0.6, 1.6) * W / 320) ** 2))
+    hz = 0.4 + rng.uniform(-0.08, 0.1)
+    for _ in range(int(rng.integers(0, 8))):                                                       # distant head / tail lights near the horizon
+        red = rng.random() < 0.5; col = torch.tensor((1.0, 0.1, 0.05) if red else (1.0, 0.95, 0.85), device=dev).view(3, 1, 1)
+        srcs = srcs + col * 3.0 * torch.exp(-(((xx - rng.uniform(0.1, 0.9)) * W) ** 2 + ((yy - hz - rng.uniform(0, 0.12)) * H) ** 2) / (2 * (rng.uniform(0.5, 1.2) * W / 320) ** 2))
+    lit = lin * illum[None] + srcs[None]
+    lit = lit + _gauss_blur((lit - 0.6).clamp(min=0), max(1.5, 0.012 * W)) * rng.uniform(0.15, 0.5)  # glare / bloom around bright sources
+    gry = lit.mean(1, keepdim=True); lit = gry + (lit - gry) * rng.uniform(0.4, 0.85)              # low-light desaturation
+    target = rng.uniform(0.012, 0.05)                                                              # auto exposure: linear mean of real night frames
+    lit = lit * (target / lit.mean().clamp(min=1e-6))
+    iso = rng.uniform(400, 3200); n0 = 4000.0 * (100.0 / iso); ph = lit.clamp(min=0) * n0
+    lit = (ph + ph.sqrt() * torch.randn(lit.shape, device=dev, generator=gen)) / n0 + 0.002 * math.sqrt(iso / 100.0) * torch.randn(lit.shape, device=dev, generator=gen)
+    out = lit.clamp(0, 1) ** (1 / 2.2)
+    return _gauss_blur(out, rng.uniform(0.5, 1.2) * W / 640).clamp(0, 1)                      # camera noise reduction (phones / dashcams denoise)

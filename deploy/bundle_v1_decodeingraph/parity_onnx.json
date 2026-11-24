@@ -1,0 +1,13 @@
+{
+ "frames": 58,
+ "ref_gates": 76,
+ "cand_gates": 75,
+ "matched": 72,
+ "same_count_frames": 57,
+ "ref_peaks": 304,
+ "cand_peaks": 300,
+ "backend": "onnx",
+ "max_corner_diff_px": 6.9949,
+ "median_corner_diff_px": 0.05677,
+ "median_ms": 71.44
+}

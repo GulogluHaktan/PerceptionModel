@@ -1,0 +1,27 @@
+{
+ "miou": 0.6955,
+ "per_class": {
+  "other": 0.697,
+  "wall": 0.763,
+  "floor": 0.74,
+  "ceiling": 0.723,
+  "door": 0.404,
+  "window": 0.663,
+  "person": 0.9,
+  "chair": 0.6,
+  "sofa": 0.675,
+  "table": 0.676,
+  "cabinet_shelf": 0.575,
+  "bed": 0.739,
+  "monitor_tv": 0.785,
+  "laptop": 0.723,
+  "keyboard": 0.651,
+  "mouse": 0.799,
+  "phone_remote": 0.855,
+  "cup_bottle": 0.66,
+  "book_paper": 0.53,
+  "plant": 0.61,
+  "bag": 0.748,
+  "appliance": 0.784
+ }
+}

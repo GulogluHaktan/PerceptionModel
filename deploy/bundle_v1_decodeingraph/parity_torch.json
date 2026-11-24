@@ -1,0 +1,19 @@
+{
+ "frames": 58,
+ "ref_gates": 76,
+ "cand_gates": 76,
+ "matched": 73,
+ "same_count_frames": 58,
+ "ref_peaks": 304,
+ "cand_peaks": 304,
+ "order_free_close": 73,
+ "big_diff": [
+  8.0,
+  12.6,
+  151.2
+ ],
+ "backend": "torch",
+ "max_corner_diff_px": 7.0058,
+ "median_corner_diff_px": 0.05241,
+ "median_ms": 11.52
+}

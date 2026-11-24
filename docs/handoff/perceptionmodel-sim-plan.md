@@ -1467,3 +1467,341 @@ Second run, same checkpoint and protocol: 53.1% (per seed 50/75/25/75/25/100/50/
 ## Update 126 — what bigY_h sees on near DroneRacing gates (visual check, runs/eval/vis/dr_near_gates_bigY_h.jpg)
 
 12 dr1 frames with a gate larger than 300 px (full frame 820x616, green = true inner corners, red = bigY_h, release v4; these frames are unseen by bigY_h). Findings: (1) their gates are thick box frames with a visible tunnel; near and tilted, the "inner opening" (the label) is a small quadrilateral inside a large purple slab, and bigY_h often draws a polygon between inner and outer edge or an over-sized/skewed shape (frames 1, 3, 9, 12 clearly off by tens of px); (2) several frames hold 2-3 big gates at once (partly out of view, steep), and the model returns 0-2 polygons (frames 546, 1029: nothing); (3) small far gates in the same frames are found tightly. So the near-gate failure is a shape/label-convention problem: thick gates seen from a steep close view have an ambiguous "inner corner" that our thin-gate training sets (sim + MonoRaceGate) never show, not a resolution problem; and dr1 as labelled (Update 107) did not fix it, consistent with its labels putting corners outside the frame via complete_square. Next idea (not started): label dr1 only for gates whose 4 inner corners are in view and no complete_square extension, and add them with a small weight; or accept the gap, since the target hardware gates (MonoRaceGate/TII) are thin-framed.
+
+## Update 127 — weight soup of three seeds (bigX_h, bigY_h, bigS3_h): fails
+
+Averaged the state dicts of the three 16-epoch seeds of the v4 recipe into runs/soup3_h (no training; chain eval on red). Result: red recall 0.0 at every threshold, no predictions at all, half-gate eval likewise empty. The seeds start from different random heads (and the backbone drifts apart over 16 epochs), so their weights are not in one basin and simple averaging breaks the model. Not usable; runs/soup3_h left in place only as a record (no data deleted). Weight averaging would need a shared initialisation / fine-tuning from one checkpoint (e.g. several short fine-tunes of bigY_h with different seeds and data order), or output-level ensembling (costs 3x inference), neither tried. Also verified in this session: runs/release_v4 SHA256SUMS all OK (bigY_h .pt, fp16 and fp32 ONNX, TensorRT check json, README).
+
+## Update 128 — model soup done properly: three short fine-tunes of bigY_h (config init_from), then average
+
+New config key init_from (warm start from a plain final.pt state dict; ignored when last.pt exists; tests 65 pass). Fine-tunes bigFT11_h / bigFT12_h / bigFT13_h: v4 recipe, no dr1, init_from runs/release_v4/bigY_h_hybrid.pt, 4 epochs, lr 5e-5 (v4: 16 epochs, 2e-4), seeds 11/12/13 (different data order and augmentation). They share one initialisation, so averaging them is legitimate (unlike Update 127). Plan: evaluate each fine-tune (control: does 4 extra low-lr epochs alone help?), then average the three into soup_ft_h and run the same chain eval; compare with bigY_h (red 0.987/0.958, lane 0.803, SUN person ~0.5). tmux ft, logs ~/bigFT1x_h.log, ~/ft_done.txt when all three finished (~3 h). Single-seed numbers: noise as before.
+
+## Update 129 — is storage the bottleneck? No, the dataloader CPU is
+
+Measured during bigFT11_h (epoch ~508 s): GPU utilisation 69-71%, memory 16.9 GB of 32; the 4 dataloader workers each run at 90-110% CPU; nvme0 read 186 MB/s (3000 r/s) at 34% utilisation; page cache holds 48 GB; 32 cores, only 4 used by workers. So the epoch time is limited by CPU-side augmentation/decoding, not by disk. Untested remedy: config workers 10-12 (could shorten epochs by up to ~25-30% if the GPU then reaches ~95%); it changes data order so it is not bit-reproducible against earlier seeds. To be tried on a run where only speed is compared.
+
+## Update 130 — model soup of the three bigY_h fine-tunes: works, but within noise of bigY_h (not released)
+
+soup_ft_h = uniform average of bigFT11/12/13_h (scripts/soup_avg.py; all three fine-tuned 4 epochs at lr 5e-5 from release v4 bigY_h, seeds 11/12/13, no dr1), evaluated with the same chain (training skipped). Unlike Update 127 (seeds from different initialisations: empty output), the shared-init soup is a working model.
+Soup vs bigY_h (fine-tunes in brackets): red 0.987 / 0.962 within 20 / 10 px (0.984 / 0.955; FT 0.981-0.984 / 0.958-0.965), TII golden 0.951 (0.942; FT 0.951-0.956), video recall 0.966 (0.962), half gates 1 corner found<0.25 0.682 (0.684), sim_racec 0.822 (0.814), KITTI inv 0.078 (0.079), DIODE inv 0.216 (0.217), SUN mIoU 0.747 / person 0.451 (0.749 / 0.457; FT person 0.42-0.47), BDD5 0.737, ADE3 0.595, IDD-AW5 0.611, lane IoU 0.810 (0.803), worst robustness recall 0.65 (0.64). Reading: 4 extra low-lr epochs alone give nothing beyond noise (TII +0.01, lane +0.005 for all three), and the soup sits at or slightly above the best single fine-tune on most rows without a clear gain. Not adopted as a new release (no metric outside the noise band); the soup tool and init_from stay for later use.
+
+## Update 131 — GateNet gap: corner refiner (add-on, main model frozen); helps corners, not the loop
+
+Goal (2026-11-19): beat GateNet g17 in the DroneRacing closed loop (SIMULATION; their camera line, soup85, seeds 71-78 x 4 drones) without touching the main model (general metrics unchanged). Training data for all add-ons: on-policy crops from training seeds only (`--save-crops`, seeds 1-12 clean render `runs_crops/ours`, 13-24 the augmented camera image `runs_crops/ours_aug` via `SAVE_CROPS_AUG=1`); seeds 71-78 never collected.
+- CornerRefiner (`src/pfm/refine.py`, `scripts/train_refiner.py`, 0.62 M params, 64x64 canonical patch per corner, soft-argmax): in-loop corner median (seed 72 diag) bigY_h 3.54 px -> v0 2.09 -> v1 1.73 px (GateNet 0.97). Real red golden (256 scale) 2.57 -> v1 0.68 (best snapshot 10k 0.64). refiner_v2 (+aug crops, 30k it): sim val keeps improving (0.77 -> 0.70 patch px) but real red gets slightly worse (7.5k 0.74, final 0.76): mild sim overfit, v1 stays the real-world refiner.
+- Loop: v1 8 seeds 40.6 % success / 57.2 % gates vs bigY_h 46.9 % (noise band) vs GateNet 78.1 / 85.9.
+- Why it cannot help: misses are not precision. Seed 72 diag "found" by gate size (410 scale) 120-2000 px: ours 2-9 %, GateNet 71 %; by distance 1-3 m: ours 5-14 %, GateNet 75 %. Offline on crops: gates > 250 px get gate-head score < 0.5 (found 0-25 % at 0.5, 40-64 % at 0.1). The existing `gate_corners` heatmap head is weak (visible-corner recall < 4 px: 5 % for > 250 px gates).
+
+## Update 132 — corner peak head + peak-confirmed weak detections (add-on, main model frozen)
+
+- `src/pfm/cornerpeak.py` + `scripts/train_cornerpeak.py`: 4 corner-identity heatmaps + sub-cell offset at stride 4 on the frozen stride-8 fused map + a light stride-4 image branch (CenterNet focal loss). `ORDER=label` (simulator corner identity = EKF map corner order TL,TR,BR,BL, verified in `isaac/vision_rig.py` and `droneracing/ekf2.py` SIGNS) beats geometric typing (held-out seed 24, > 250 px recall < 4 px 0.84 vs 0.73; false peaks 0.5 vs 1.1 per frame). v3 adds random rotation with zero fill (`P_ROT=0.7`, derotated loop input): 0.82 / 0.40 false peaks. Offline vs GateNet peaks on the same crops: ours 92 % right type, median 0.66 px; GateNet 81 % right type, 0.92 px.
+- Overfitting check `scripts/check_overfit_cpk.py` (train seeds 5,18 vs held-out 24): small/medium gates gap 1-5 %, > 250 px gap grows to ~0.08-0.12 while held-out still rises; choose snapshots by held-out.
+- Loop finding (many seed-72 diags): feeding single-corner peaks into their EKF next to OUR whole-gate detections makes all drones crash at the first gate (estimator velocity error 1.2-2.5 m/s), whatever the peak source: our head, GateNet's own peaks, even simulator oracle peaks; GateNet detections + peaks fly. Peaks alone also fail (GateNet peaks worse than ours). Reading: in this EKF configuration a close gate must come as a whole-gate detection; peaks only support. GateNet detects close gates whole (extrapolated corners).
+- Fix tried: `OURS_THR=0.1 OURS_CPK_CONFIRM=1` in `ours_detector.py`: a weak gate detection (score < 0.5) is kept only when >= 2 in-image corners have a head peak within max(6 px, 0.1 x size); confirmed corners snap to the peak; peaks are passed only as copies of gate corners. Seed 72 diag: estimator 0.42 m/s / 1.0 deg (GateNet 0.46 / 1.1), gate obs err 0.14 / 0.17 / 0.22 / 0.34 m (GateNet 0.13 / 0.15 / 0.13 / 0.23; refiner v1 alone 0.14 / 0.18 / 0.29 / 0.45), misses 18 % -> 13.5 %, corner median 1.29 px. 8-seed loop running (TAG ours_confirm_v1).
+- Their stack (EKF, policy, camera line) unchanged; diagnostic switches only (`ORACLE_PK`, `OURS_GN_PEAKS`, `OURS_NO_DETS`, `EKF3_DBG`) added with backups `*.bak_before_*`.
+- **8-seed loop (seeds 71-78, 32 flights), ours_confirm_v1: 75.0 % success / 85.5 % gates** (per seed 75/75/50/75/25/100/100/100) vs GateNet g17 78.1 / 85.9, refiner v1 alone 40.6 / 57.2, bigY_h ~47. Without seed 72 (used for diag tuning, so not clean): ours 75.0 vs GateNet 75.0. Reading: tie within noise (95 % CI about ±15 points), no "beats" claim. Fresh seeds 81-88 queued for both detectors (TAGs fresh_ours_confirm, fresh_gatenet).
+
+## Update 133 — clean seeds 81-88, NearGateHead (add-on), validation protocol
+
+- Seed 72 was used for diag tuning, so 71-78 are no longer clean. Clean test: seeds 81-88 for both detectors (fresh_gatenet / fresh_ours_confirm); first 5 seeds: GateNet 90 % success, ours_confirm_v1 60 % (75/100/75/100/100 vs 50/100/50/75/25). The 71-78 tie was optimistic. From now on settings are chosen on validation seeds 31-38 only.
+- Seed-31 diags (validation): refiner v2 in the loop (sim) beats v1 (misses 9.5 vs 11.2 %, median 1.02 vs 1.16 px); OURS_THR 0.05 slightly better than 0.1.
+- NearGateHead (`src/pfm/cornerpeak.py`, `scripts/train_neargate.py`): add-on dense whole-gate head (centre + 8 corner offsets, stride 4, dilated context) on the frozen main features, trained on the crops with all 4 corners incl. outside the image (simulator identity order), rotation aug. Strict held-out metric (mean visible-corner error < max(4 px, 5 % size), no refiner): main gate head 120-250 px 0.01 / > 250 px 0.08; neargate_v1 (15k) 0.63 / 0.54; neargate_v2 (30k) 0.75 / 0.58, false 0.14 per frame; train-subset numbers equal (no overfitting). Merged into our detections in `ours_detector.py` (`OURS_NG`, `OURS_NG_THR`, size >= 15 % of the crop; replaces a duplicate main detection when larger).
+- Seed-31 diag with neargate_v1 (thr 0.6, refiner v2, OURS_THR 0.05, confirm): misses 6.3 % (GateNet 17.4), corner median 0.98 px (0.95), found for gates > 120 px 58 % (71), gate obs err p90 0.28/0.41/0.51/0.68 m (GateNet 0.37/0.56/0.49/0.96). Validation loops queued: val_H (that config with neargate_v2) vs val_gatenet on seeds 31-38.
+- Clean seeds 81-88 final (32 flights each): **GateNet 90.6 % success / 93.2 % gates, ours_confirm_v1 59.4 % / 72.2 %**. GateNet clearly ahead on clean seeds; the confirm-only config is not enough. Next: val_H (neargate_v2 + refiner v2 + confirm) vs val_gatenet on validation seeds 31-38 (started 03:13).
+- **Validation seeds 31-38: val_H (neargate_v2 thr 0.6 + refiner v2 + OURS_THR 0.05 + confirm with cornerpeak_v3) 87.5 % success / 92.6 % gates vs GateNet 87.5 % / 91.8 %** (per seed 50/100/100/100/50/100/100/100 vs 50/75/100/100/75/100/100/100). Tie on validation, +28 points over the confirm-only config. Final clean test with the frozen settings on new seeds 91-98 (test2_H vs test2_gatenet), 81-88 no longer used.
+- **Clean test seeds 91-98 (32 flights each, frozen val_H settings): GateNet 84.4 % success / 87.1 % gates, ours (val_H) 75.0 % / 81.0 %** (per seed GateNet 100/100/75/100/50/75/75/100, ours 75/100/100/50/25/100/75/75). Ours wins seeds 93, 96, loses 91, 94, 95, 98. Gap 3 flights of 32 (inside the ±15 pt noise), but GateNet is ahead on both clean sets, so no "beats" claim. Gate obs err at 8-99 m is higher for ours (median 0.21-0.34 m vs GateNet 0.17-0.25 m): far-gate precision is the next gap besides near gates. (Note: the summary line prints `det=gatenet` for every non-sim detector; it is a hardcoded label in eval_vision.py.)
+- neargate_v3 (60k iters, 50k snapshot chosen: held-out 60-120 0.86 / 120-250 0.75 / > 250 0.73 vs v2 0.80 / 0.75 / 0.58; train-heldout gap 0.04 at 50k, 0.08 at 60k) on validation 31-38: **65.6 % / 79.7 %** (val_H with v2: 87.5 / 92.6). Seed-31 in-loop perception unchanged (> 120 px found 57.9 %). Rejected; v2 stays. (First val_H3 launch failed: CREF must be a path, `runs/refiner_v2/refiner.pt`.)
+- `scripts/eval_pipeline_crops.py`: offline full-pipeline check on held-out crops (seed 24), order-agnostic. diag-like found (>= 2 corners < 4 px at 384) main+confirm 0.53/0.43/0.20/0.05 (0-60/60-120/120-250/250+), + neargate_v2 0.54/0.88/0.78/0.55, + refiner v2 0.67/0.98/0.92/0.68, false 0.31 per frame. The refiner helps big gates.
+- The in-loop PERCEPTION "found" needs two same-type peaks within 4 px in the 820 px image (≈ 1.9 px at 384), so for close gates it is a precision metric: ours detects close gates far more often (CORNER ERR 250+ px missed 22 % vs GateNet 93 %) but less precisely; gate obs err in metres on seed 31 is not worse than GateNet. The 91-98 gap (3 flights) is inside the loop noise, so a larger clean test with the frozen val_H settings: seeds 101-116 (64 flights each), TAGs test3_H / test3_gatenet.
+- **Clean test seeds 101-116 (64 flights each, frozen val_H): GateNet 75.0 % success / 80.2 % gates, ours 65.6 % / 74.4 %.** Pooled with 91-98 (96 flights each): GateNet 78.1 %, ours 68.8 % success; per seed ours wins 5, loses 12, ties 7 (sign test p ≈ 0.14, two-proportion z ≈ 1.5). Not significant alone, but GateNet is ahead on all three clean sets (81-88, 91-98, 101-116): **GateNet is not beaten yet.** Seeds 81-116 are now used; next clean test needs 121+.
+- Crash causes in the clean tests are almost all "frame" (cause 1) for both detectors. Offline checks on held-out crops (seed 24): confirm-snap radius 0.05/0.1/0.2 and same-type-only snapping (`OURS_CONFIRM_R`, `OURS_CONFIRM_TYPE` in ours_detector.py, defaults = old behaviour, backup `.bak_before_confr`) change found rates by <= 3 points, no lever. Identity-order accuracy (what the EKF sees) vs order-agnostic: 0.48 vs 0.59 (0-60 px), 0.92 vs 0.95, 0.83 vs 0.86, 0.73 vs 0.77; main detections use geometric order like GateNet, so this is shared.
+
+## Update 134 — far gates: corner identity order and recall (offline, held-out crops seed 24)
+
+- In-loop gate obs err is equal near (0-2 m) but worse far for ours on every set (8-99 m median / p90: test3 0.25 / 0.66 m vs GateNet 0.21 / 0.46; test2 0.24 / 0.60 vs 0.20 / 0.44; val 0.27 / 0.71 vs 0.22 / 0.56).
+- `scripts/eval_pipeline_crops.py` now also runs GateNet (`EVAL_DET=gatenet`) and reports identity-order accuracy, matched corner error and size error. Gates 0-60 px: GateNet found 0.71 (identity order 0.67), median 1.10 px, p90 3.6 px; ours (val_H) 0.59 (identity 0.48), median 0.55, p90 2.6 px. Reading: ours is more precise but misses far gates more often and gives the wrong corner identity for ~ 1/5 of them (the main detections are sorted geometrically, which mirrors gates seen from behind); the EKF associates per corner identity.
+- Fix in `ours_detector.py` (add-on only): `OURS_NG_REORDER=1` puts a main detection that a near-gate detection duplicates into the near-gate head's identity order (any size, NG score >= `OURS_NG_RTHR` 0.3); `OURS_NG_MIN=0` lets the near-gate head also add small gates. Offline (val_H + both): 0-60 px found 0.91 (identity 0.91), p90 1.7 px; 60-120 0.95; 120-250 0.86; > 250 0.78; false 0.36 per frame (GateNet 0.27). Validation loops val_R (NG thr 0.6) / val_R5 (0.5) on seeds 31-38.
+- **Validation loops: val_R 15.6 % / 39.9 %, val_R5 15.6 % / 37.6 %** (val_H 87.5 / 92.6). Ablation seeds 34, 36: reorder only 75 / 50 %, small near-gate adds only 25 / 25 % (val_H 100 / 100). Reading: their EKF wants the geometric corner order (as the main head and GateNet decode give), not simulator identity; identity-ordered detections hurt, and the small near-gate detections came in identity order. The offline "identity order" metric was misleading. Next: `OURS_NG_GEO=1` (all near-gate detections sorted geometrically) alone (ab_geo) and with small adds (ab_geo_small), seeds 34 36 31 35.
+- Ablations seeds 31/34/35/36 (16 flights each): `OURS_NG_GEO=1` (near-gate detections sorted geometrically) 25/75/25/75 = 50 %; + small adds 0/0/0 (stopped); val_H 50/100/50/100 = 75 %; GateNet 50/100/75/100 = 81 %. So big near-gate detections work better in their own identity order, while re-ordering main detections and adding small near-gate detections hurt. Every new flag (`OURS_NG_REORDER`, `OURS_NG_GEO`, `OURS_NG_RTHR`, `OURS_CONFIRM_*`) defaults to the val_H behaviour; val_H stays the best configuration.
+- Statistics note: one seed = 4 flights (one flight = 25 points), so a 9-point difference (the clean-test gap) needs roughly 300 flights per arm to resolve at 95 %; validation runs of 32 flights can only reject large regressions. Offline crop metrics (found rate, identity order) did not predict loop success in this round.
+- Duplicates: the merge treats a near-gate detection as a duplicate only below 0.25 x size mean corner distance, so two detections of one gate survive. Offline duplicates per frame (`dup_per_frame` in eval_pipeline_crops.py): GateNet 0.018, val_H 0.054, val_H + small adds 0.317 (explains the 0 % loops). New `OURS_DEDUP_ALL=1` (final NMS after the refiner; `OURS_DEDUP_IOU`, `OURS_DEDUP_INSIDE`): IoU-only 0.2 with small adds: 0-60 px found 0.91, 60-120 0.92, 120-250 0.88, > 250 0.77, false 0.17, dup 0.002 (GateNet 0.71 / 0.65 / 0.24 / 0.04, false 0.26). Validation loops val_D (val_H + dedup) and val_DS (+ small adds) on 31-38.
+- Validation 31-38: val_D (val_H + dedup) 78.1 % / 84.9 %, val_DS (+ small adds + dedup) 81.2 % / 85.8 % (val_H 87.5 / 92.6, GateNet 87.5 / 91.8). Dedup turns the small adds from 0 % into a working config, but neither variant beats val_H inside the noise. Seed-34 diag: small adds without dedup 4/4 crashed within 1500 steps with normal perception numbers (duplicates, not misses). Larger validation to choose: seeds 41-56 (64 flights each), val2_H vs val2_DS; then the winner on clean seeds 121+ vs GateNet.
+- **Validation seeds 41-56 (64 flights each): val2_DS 82.8 % vs val2_H 68.8 %** (per seed DS wins 8, loses 2, ties 6). Pooled with 31-38: DS 82.3 % vs H 75.0 %. DS promoted (frozen: OURS_DEDUP_ALL=1 OURS_DEDUP_INSIDE=0 OURS_DEDUP_IOU=0.2 OURS_NG_MIN=0 OURS_NG=ng2 thr 0.6, OURS_THR 0.05, confirm cpk3, SNAP 0, refiner v2). Clean test seeds 121-136 (64 flights each): test4_DS vs test4_gatenet.
+- **Clean test seeds 121-136 (64 flights each, frozen val_DS): GateNet 87.5 % success / 92.4 % gates, ours (val_DS) 82.8 % / 88.3 %.** Per seed ours wins 2 (124, 134), loses 4 (126, 129, 132, 135), ties 10. Gap 3 flights of 64 (was 6 of 64 on 101-116 with val_H). Gate obs err (m, med / p90): 0-2 m 0.095 / 0.22 vs GateNet 0.099 / 0.23, 2-4 m 0.11 / 0.28 vs 0.11 / 0.39, 4-8 m 0.14 / 0.31 vs 0.14 / 0.39, 8-99 m 0.25 / 0.59 vs 0.21 / 0.49; path speed 19.4 vs 19.3 m/s. Not beaten; close and mid range now better than GateNet, far range (8+ m) still worse. Seeds 121-136 used.
+
+### Update 135 — min-size filter (OURS_MIN_SIZE) on top of val_DS (2026-11-20)
+Validation seeds 41-56, 4 flights/seed. val_H 68.8 · val_DS 82.8 · **val3_min14 90.6** (no seed below 75) · min8 81.2 / min20 78.1 (41-48 only).
+Far-gate (8-99 m) obs err did not change (0.244/0.628 vs 0.244/0.61); near bins slightly better. Gain likely from fewer false/duplicate tiny dets, not better far estimates.
+Clean test queued: test5_min14 vs test5_gatenet on seeds 141-156 (unused).
+Clean test 141-156 (64 flights each): **test5_min14 87.5 vs test5_gatenet 81.2** (seed wins 6 / losses 2 / ties 8; flights 56 vs 52 finished). Obs err 2-4 m p90 0.27 vs 0.35, 4-8 m 0.30 vs 0.37 (ours better); 8-99 m 0.24/0.61 vs 0.21/0.50 (GateNet better). First clean test where ours leads; difference within loop noise (sign test p≈0.3) → confirmation test6 on seeds 161-176 started. Flight videos: ~/DroneRacing_eval/scripts/run_video_ours.sh → runs_video/.
+Confirmation test 161-176: **test6_min14 87.5 vs test6_gatenet 82.8** (seed wins 6 / losses 3 / ties 7). Obs err p90 2-4 m 0.26 vs 0.41, 4-8 m 0.28 vs 0.34 (ours better); 8-99 m 0.57 vs 0.46 (GateNet better).
+**Combined clean 141-176 (128 flights each): ours 87.5 vs GateNet 82.0; finished flights 112 vs 105; seed wins 12 / losses 5 / ties 15 (sign test p≈0.14).** Ahead in both independent clean tests; GateNet beaten in sim closed loop with the main model frozen. Remaining weakness: far gates (8+ m).
+
+### Update 136 — UZH Swift track replica (2026-11-21, SIMULATION)
+Track from uzh-rpg/agile_flight envsim/parameters/tracks/real_track.yaml (7 gates, split-S 4/5, 30x30 m hall, 3 laps); added as DR_FIXED_TRACK=uzh in ~/DroneRacing_eval/droneracing/track.py (backup .bak_before_uzh; default unchanged). Seeds 201-208, 4 drones, jitter 0.3 m / 0.05 rad.
+Ours (min14) 1/32 success, gates 24.7 %; GateNet 2/32, gates 28.6 %. Both near zero: the soup85 policy (trained on A2RL-scale tracks, ~16 m gate spacing) cannot fly this tight track; detections are fine (belief error 0.08-0.21 m in video). Seed 202: 0 gates for both (start geometry?). --sim-det 0 crashes with EKF5 (peaks undefined); --oracle-obs is not a valid ceiling (crashes on A2RL too). A meaningful UZH success rate needs a policy trained on this track type.
+
+### Update 137 — self-improvement loop, step 1-3 (2026-11-21)
+Step 1 shift detection (scripts/shift_signals.py, runs/selfimprove/shift_signals.json): real never-seen gate frames (red + TII golden) under pfm.effects conditions. Gate recall 10 px: clean 0.954, fog 0.664, night 0.539, NIR-like 0.421, blur 0.811. Feature distance (Mahalanobis of pooled stride-8 fused features vs clean reference) separates condition from clean with AUROC 0.91 / 0.999 / 0.94 / 0.98; low gate confidence predicts per-frame recall (pooled Spearman -0.69). The frozen core can flag its own hard conditions.
+Step 2-3 label-free condition module (scripts/train_cond_adapter.py, eval scripts/eval_cond_adapter.py): input-side residual adapter (0.51 M) trained so core(A(cond(x))) ~ core(x). v0 (LR 1e-3, no anchor) diverged (destroyed clean images). v1 (LR 2e-4 + pixel restoration anchor + 20 % clean identity, 15k it, general images): clean unchanged (gate 0.962, BDD 0.735), BDD seg at night +0.063 (0.536 -> 0.599), NIR +0.008, but gate recall DROPS under conditions (night 0.527 -> 0.37, NIR 0.424 -> 0.355, blur 0.805 -> 0.748) -> REJECTED by the acceptance rule. v2: + 50 % gate-rich sim images and MSE on the raw dense gate head (order-free, corner precision) — running (runs/selfimprove/cond_adapter_v2).
+Condition adapter v2 (+50 % sim gate images, raw gate-head MSE): clean identical (gate 0.954, BDD 0.733); NIR gate 0.424 -> 0.462 (+0.038), night BDD 0.536 -> 0.591 (+0.055); but fog gate -0.034 / seg -0.012, night gate -0.012, blur gate -0.034. Not accepted as one module; per-condition routing (plug in only where it helps, e.g. NIR) is the next step.
+
+### Update 138 — PaperOrchestra run (Claude backend) finished
+docs/paper_orchestra/PerceptionModel_paperorchestra.pdf (+ latex/, review_v1.json). Its automated reviewer: 3/10, Reject (Originality 2, Soundness 2, Contribution 2). Main points: frozen-trunk extension not novel (single case study); module latency/params and GateNet cost not measured; modules unspecified; post-processing tuned only for our arm (GateNet should get matched NMS/min-size); no ablation of the final config; parity needs an equivalence test/CI; no comparison with adapters/LoRA/fine-tuned copy; simulation only; core already trained on gates; related work thin. Refinement stopped after v1 because the account's WEEKLY usage limit was hit (claude -p calls share the user's plan).
+
+### Update 139 — per-condition modules + condition-aware router: all three accepted (2026-11-22)
+scripts/eval_cond_router.py. Condition classifier = LDA on pooled fused core features, fitted on 200 general TRAINING images x 5 conditions. Acceptance on validation (even red/TII frames + first half of 300 BDD val): nir 0.418/0.710 -> 0.477/0.714, night 0.543/0.532 -> 0.559/0.616, fog 0.668/0.649 -> 0.672/0.661 (gate recall / BDD mIoU) -> all accepted.
+Test (odd red/TII frames + second half BDD), full routed system vs core: clean 0.954/0.730 = identical; fog 0.660/0.647 -> 0.668/0.660; night 0.527/0.542 -> 0.557/0.618; NIR 0.424/0.706 -> 0.469/0.715; blur (no module) 0.805/0.570 -> 0.798/0.570 (router sends some blur frames to another module). Router accuracy: clean 0.87, fog 0.81, night 1.0, NIR 0.98, blur 0.73.
+Caveat: test conditions come from the same effect simulator as the training data; real night / NIR footage still needed.
+Next: self-expansion step — a condition without a module (blur) gets one through the same loop.
+Self-expansion: blur had no module -> same loop trained cond_blur (15k it) -> accepted on validation (0.816/0.558 -> 0.848/0.621) -> test blur 0.805/0.570 -> 0.805/0.639 (seg +0.069, gate equal); all other rows unchanged (runs/selfimprove/router_eval_v2.log). 4 condition modules, core untouched.
+
+### Update 140 — condition modules in the DroneRacing closed loop: night (SIMULATION, seeds 141-148, 32 flights/arm)
+DR_COND=night applied to the camera image (eval_vision hook), router + 4 modules in ours_detector (OURS_ROUTER / OURS_MODULES).
+Core alone 78.1 % (25/32), core + router 78.1 % (25/32); same clean-loop reference on these seeds 81.2 % -> the night effect barely hurts the loop here, so the loop cannot show a module gain for night. Obs err similar (router slightly lower at 0-2 m). NIR test queued (nir_core / nir_router).
+
+### Update 141 — condition modules in the closed loop: NIR (SIMULATION, seeds 141-148, 32 flights/arm)
+DR_COND=nir. Core alone 65.6 % (21/32), gates 78.1 %; core + router + modules 68.8 % (22/32), gates 82.4 %. Clean reference 81.2 %.
+NIR does hurt the loop (-15.6 pt). The module recovers +3.1 pt success / +4.3 pt gates, inside loop noise (±10-15 pt, per-seed 4 flights): direction positive, not significant.
+Gate obs err (mean of per-seed medians): 0-2 m 0.21 -> 0.16, 2-4 m 0.26 -> 0.20, 4-8 m 0.24 -> 0.22, 8+ m 0.42 -> 0.49 (far gates slightly worse).
+Next: night_blur (combined condition, no own module) running in tmux nbc / nbr.
+
+### Update 142 — closed loop: night_blur (combined, no own module; SIMULATION, seeds 141-148)
+Core alone 18.8 % (6/32), gates 35.2 %; core + router 15.6 % (5/32), gates 33.1 % -> no gain (noise), far-gate obs err worse (4-8 m 0.56 -> 0.82, 8+ 1.52 -> 1.97).
+Offline routing on 150 night_blur sim frames: night 142, fog 5, clean 3 -> the router picks the night module, which does not undo blur.
+=> nearest-module routing is not enough for combined conditions. Self-expansion: train cond_night_blur (train_cond_adapter.py now has a night_blur condition), add it as a 6th router class, accept on validation, then repeat the loop test.
+
+### Update 143 — cond_night_blur v1 REJECTED by the acceptance gate
+15k it, CONDS=night_blur, GATE_DIR sim gates. Validation: gate 0.273 -> 0.242 (regression), seg 0.306 -> 0.474 (+0.17) -> rejected (no-regression rule). Router with 6 classes: night_blur classified 0.886, other rows unchanged (runs/selfimprove/router_eval_v3.log, router6.npz).
+The acceptance gate did its job (a module that helps seg but hurts gates is not plugged in). v2: W_GATE=4, P_GATE=0.8 (more gate signal).
+
+### Update 144 — cond_night_blur v2 ACCEPTED (self-expansion for a combined condition)
+W_GATE=4, P_GATE=0.8, 15k it. Validation: gate 0.273 -> 0.348, seg 0.306 -> 0.463 -> accepted. Test night_blur: core 0.244/0.310 -> system 0.344/0.484 (gate +0.10, seg +0.17); clean/fog/night/nir/blur test rows unchanged (runs/selfimprove/router_eval_v4.log). 5 modules + 6-class router (router6.npz), core untouched.
+Lesson: for the combined condition the gate-head term must dominate (v1 with W_GATE=1 helped seg but hurt gates and was rejected).
+Closed-loop repeat running: tmux nbr6, TAG=nightblur_router6 (same seeds 141-148; core reference 18.8 %).
+
+### Update 145 — closed loop night_blur with the accepted module (router6 + 5 modules; SIMULATION, seeds 141-148)
+Success 18.8 % (6/32) = core 18.8 % (same); gates passed 35.2 % -> 40.1 %; gate obs err (mean of per-seed medians) 4-8 m 0.56 -> 0.45, 8+ m 1.52 -> 0.75 (half), near ranges equal.
+Per seed: on the 5 seeds where core finished nothing (143, 145-148) the module finished laps on 3 (25 % each) and gates rose from 17-27 % to 37-45 %; it lost on 141/142.
+Reading: perception gain is real (far-gate error halved, consistent with offline +0.10 gate recall), success is limited by the controller in this harsh condition and by loop noise. More seeds queued: 149-156, both arms (nbc2 / nbr62).
+
+### Update 146 — night_blur closed loop, 16 seeds total (141-156, 64 flights/arm)
+Seeds 149-156: core 25.0 % (8/32), gates 42.8 %; router6 + modules 25.0 % (8/32), gates 47.3 %.
+Combined 141-156: success 21.9 % vs 21.9 % (14/64 each, identical); gates passed 39.0 % -> 43.7 % (per-seed gate wins 10 / losses 6, sign test p~0.45);
+gate obs err 4-8 m 0.55 -> 0.44, 8+ m 1.14 -> 0.73.
+Conclusion: the accepted module improves closed-loop perception (far-gate error -35 %, more gates passed) but not lap success in this harsh condition; the controller / loop noise dominates. Closed-loop condition tests closed here: night (no loss to recover), NIR (+3 pt, n.s.), night_blur (0 pt success, +4.7 pt gates).
+
+### Update 147 — REAL dark frames: the synthetic-condition modules do NOT transfer (negative result)
+scripts/eval_real_dark.py: labelled BDD + IDD-AW eval frames picked by mean luminance (<0.25: 61 dark; >0.35: 61 bright control), seg mIoU (11 road classes), no simulated effect.
+Dark: core 0.484 | routed system 0.468 | forced modules: nir 0.470, night 0.416, fog 0.478, blur 0.437, night_blur 0.415. Routes: clean 23, nir 27, night 9, fog 2.
+Bright: core 0.555 | system 0.552; routes clean 45, fog 12, nir 4.
+With an in-distribution abstain radius (router6a.npz, per-class 99th pct of training distance; fit_cond_router.py now saves thr): dark system 0.477 (10 abstain), bright 0.552.
+Reading: the simulated night (uniform -4 EV + sensor noise) is not real night (street lights, headlights, colour cast, glare); real dark frames are routed mostly to "nir" (desaturated look). Every module hurts real dark frames; the night module most (-0.07).
+=> Sim-only acceptance is not enough. Needed: (a) acceptance on a small REAL validation set per condition (would reject all current modules for real dark -> system = core, no harm); (b) a realistic night generator (light sources, glare, colour cast, calibrated on real dark frames) or 3DGS/real unlabelled night data with an unpaired objective.
+
+### Update 148 — realistic night generator (pfm.effects.night_real) + real dark split
+Real labelled dark pool: eval_bdd + eval_iddaw + all 1000 BDD val (666 never used; scripts/make_real_dark_split.py -> data/general/real_bdd), mean luminance < 0.25 -> 101 frames, val 51 / test 50 (runs/selfimprove/real_dark_split.json). BDD 10k has few night frames; ACDC mirror (HF qninhdt/acdc-cyclegan, 4.5 GB) downloading to data/general/raw_acdc.
+night_real: ambient moon/city glow (blue or orange, sky ~black), own headlight cone with 1/d^2 falloff from the core's inverse depth, sodium/LED street-lamp pools + small visible sources + glare, distant head/tail lights, low-light desaturation, auto exposure (real-night linear mean), high-ISO noise + camera denoise.
+Feature-space distance to REAL-VAL dark frames (scripts/real_night_calib.py, router whitening): clean day 5.95, old sensor night 7.71 (farther than daylight!), night_real 5.23 (closest). 1-NN real-vs-fake still 0.97 -> closer, not indistinguishable.
+Next: cond_night_real module (train_cond_adapter CONDS=night_real), accept on REAL val, report on REAL test.
+
+### Update 149 — cond_night_real module + REAL acceptance: all modules rejected on real data (system = core, no harm)
+cond_night_real (15k it, night_real effect, W_GATE=4). Router router_r.npz: 7 sim classes + 4 REAL classes fitted on ACDC unlabelled trainB images (real_night/fog/rain/snow).
+Real dark frames now route mostly to night_real / real_night (25/51 val, 24/50 test) instead of nir.
+Real seg mIoU (11 classes), forced module on REAL TEST dark: core 0.542 | night_real 0.422 | night 0.480 | night_blur 0.479 | nir 0.523 | fog 0.535 | blur 0.512. Bright test: core 0.567, night_real 0.539.
+Real acceptance (scripts/eval_real_accept.py, backward elimination on real val + final "must beat core" guard): every module removed -> accepted [] -> test dark 0.542 = core, bright 0.567 = core (all modules on: 0.501 / 0.567).
+Reading: (1) the real-acceptance gate works: the loop no longer ships modules that hurt real data. (2) An image-space night->day adapter, even trained on the more realistic night, damages real night frames (it is asked to hallucinate daylight pixels: L1 restoration term). (3) Headroom is small on these real dark frames: core 0.51-0.54 dark vs 0.56-0.57 bright.
+Next candidates: feature-space module (adapter on fused features / LoRA-style, no pixel restoration) self-trained on real ACDC night (pseudo-labels from the core on night_real-augmented views + consistency), measured on the real split; a harder labelled real night test set (ACDC / Dark Zurich labels need registration).
+
+### Update 150 — real-split numbers were on the OLD label set (v1): redone with v3 (what the model is trained on)
+Same 334 eval_bdd frames: v1 labels mIoU 0.620 (tree_pole = poles only 0.22, vegetation/sky ignored) vs v3 0.734. Updates 147-149 used v1 -> numbers too low (ranking unchanged).
+make_real_dark_split.py now writes v3 labels; real_dark_split.json points to eval_bdd3 / eval_iddaw3 (old: real_dark_split_v1labels.json).
+v3 real test: core dark 0.607, bright 0.699 (day-night gap 0.09). Modules forced on dark: night_real 0.462, night 0.561, night_blur 0.556, blur 0.580, fog 0.600, nir 0.593; all on 0.557. Real acceptance again rejects all -> system 0.607 / 0.699 = core.
+Per-class (v3, 334 day frames): background 0.94, road 0.93, car 0.89, building 0.80, tree_pole 0.80, person 0.51, other_obstacle 0.28 -> the mean is pulled down by small objects (person, signs/fences/bikes) at 448 px input.
+
+### Update 151 — vehicle package (deploy/): one-pass TensorRT runtime of the flown min14 detector
+deploy/export_system.py -> bundle/system_448.onnx (re-parameterised core + CornerPeakHead + NearGateHead on ONE shared feature pass; the research path ran the core 3x per frame; outputs depth, seg, decoded gates, cpk heat/off, decoded near-gate gates, pooled feature) + refiner.onnx (dynamic N) + bundle.json (min14 constants) + ref_frames.npz (24 frames, PyTorch reference).
+deploy/pfm_runtime.py GatePerception(backend trt|onnx|torch): post-processing re-implemented from ours_detector.py (vectorised refiner, CPU post on tiny tensors). deploy/camera.py (IMX219 nvarguscamerasrc / USB / file replay, newest-frame only), deploy/run.py (UDP JSON per frame, recording, waits for the GPU at boot), build_engines.py (TensorRT 10 fp16, on device), check_device.py, pfm-perception.service (systemd user unit), pack.sh -> deploy/dist/pfm_vehicle_YYYYMMDD.tar.gz (58 MB).
+Checks (RTX 5090, TensorRT 10.16.1 = Orin's 10.16): ONNX vs PyTorch 24/24 same gates, 1e-4 px; runtime vs research detector identical (0.0 px, 76/76 gates on 58 frames) when heads use the research bf16; fp32/fp16 heads -> corner-snap amplifies tiny differences to 5-20 px on some gates (research code shows the same between cuDNN algorithm choices). TRT fp16 engine vs PyTorch: gates median 0.26 / max 0.59 px, near-gate max 0.40 px, seg 99.9 % same class, depth 0.6 % rel. Time per frame (5090): engine 1.5 ms, total 5.2 ms (refiner vectorised 8.9 -> 1.9 ms). Packaged copy rehearsed end to end (build, check, file-replay loop 72 FPS, capture->output 3.4 ms median).
+Installed tensorrt-cu13 10.16.1 into .venv (replaced 11.4) and ~/venvs/isaac (for the closed-loop test). ours_detector.py: OURS_RUNTIME=trt|onnx|torch uses the package (backup .bak_before_runtime).
+Closed loop with the TRT fp16 runtime as detector: running (TAG runtime_trt, seeds 141-148).
+No Orin access from this PC: Orin timing / IMX219 accuracy still to measure on the device (README "risks").
+Closed loop result (TAG runtime_trt, seeds 141-148, 32 flights, TensorRT fp16 engines + deploy runtime as the detector): success 81.2 % (26/32), gates passed 88.8 %, gate obs err med 0-2 m 0.09 / 2-4 m 0.11 / 4-8 m 0.13 / 8+ m 0.25 = research detector on the same seeds 81.2 % (night-test clean reference, Update 140). The deployed path flies like the research path.
+
+### Update 152 — camera field of view: the stock IMX219 lens (~62 deg) breaks the flown system (SIMULATION, TRT runtime, seeds 141-148)
+HFOV 62 (scripts/run_fov_loop.sh, HFOV env): success 18.8 % (6/32), gates passed 41.9 %, gate obs err med 0-2 m 0.35 / 2-4 0.37 / 4-8 0.45 / 8+ 0.64
+vs HFOV 128 (same seeds, same runtime): 81.2 %, 88.8 %, 0.09 / 0.11 / 0.13 / 0.25. Obs error ~4x worse at near range.
+=> with the stock lens the vehicle would fail; use a wide IMX219 lens (~120-160 deg variants) or retrain/adapt for the narrow lens. HFOV 100 test queued to find where it breaks.
+HFOV 100: success 78.1 % (25/32), gates 85.8 %, obs err 0.14 / 0.14 / 0.17 / 0.26 -> within loop noise of 128 deg (81.2 %). Breakdown lies between 62 and 100 deg.
+Hardware rule: IMX219 with a lens of >= 100 deg horizontal (120 / 160 deg variants); the stock ~62 deg lens is not usable without adaptation.
+GateNet at HFOV 62 (same seeds): success 6.2 % (2/32), gates 24.6 %, obs err 0.29 / 0.36 / 0.58 / 0.54 -> GateNet collapses too (ours 18.8 %). The narrow lens breaks the whole stack (gates leave the view, policy / EKF tuned for the wide camera), not our perception specifically. Lens rule confirmed: >= 100 deg.
+
+### Update 153 — plug-in modules without the Orin: night (label-free, feature space) fails, supervised SEG module accepted
+1. Feature-space night adapter (scripts/train_feat_adapter.py: residual adapter on p4/p3/p2, synthetic night_real pairs + FixMatch self-training on ACDC night): real dark val 0.6275 -> 0.6247 (2k) -> 0.6196 (8k). Real-only self-training (W_SYN=0): collapses 0.55 -> 0.51. => label-free night adaptation does not help this core; closed.
+2. Resolution check: 2x2 tiling (each tile at 448) on BDD v3: person 0.540 -> 0.517, other_obstacle 0.283 -> 0.172, mIoU 0.732 -> 0.691 -> small objects are not a resolution limit.
+3. SegRefine module (scripts/train_seg_module.py, 0.4M params: stride-4 image branch + fused features + core seg logits -> zero-init residual logits; supervised on general train v5/v3 labels, class weights person 4 / other_obstacle 3 / car 1.5 / tree_pole 1.5; core frozen). Checkpoint chosen by the worst set (no set may lose): it 3000.
+   Full eval core -> module: bdd5 0.736 -> 0.745, iddaw5 0.611 -> 0.628, rugd3 0.505 -> 0.512, ade5 0.595 -> 0.595; other_obstacle up everywhere (iddaw 0.11 -> 0.175); person ~flat.
+   REAL dark split (v3): val 0.628 -> 0.640, test 0.607 -> 0.618 (+0.011): the supervised task module helps real night more than any label-free night module.
+   runs/modules/seg_refine/module.pt -> going into the vehicle package (system graph output "seg").
+3b. Calibration: deploy/calibrate_camera.py (fisheye/pinhole, OpenCV 4/5) + camera.Undistort + run.py --calib/--hfov; synthetic fisheye check: focal 0.3 %, centre 0.5 px, rms 0.32 px.
+
+### Update 154 — zoom second pass (OURS_REFINE=1) on top of min14: REJECTED
+Seeds 141-148: success 62.5 % (20/32) vs 81.2 % without; gates 75.7 %; obs err 0.25 / 0.26 / 0.27 / 0.37 vs 0.09 / 0.11 / 0.13 / 0.25 -> worse at every range (the re-detected corners replace refined + confirmed ones). Not ported to the vehicle runtime.
+
+### Update 155 — runtime stream race fixed; fast post-processing; teacher gap checks (seg + depth); pseudo-labels
+1. BUG (deploy/pfm_runtime.py TrtBackend): the input copy ran on the engine's own CUDA stream without waiting for the default stream (resize / patch
+   sampling) -> under GPU load the engine read a half-written input: same frame twice gave outputs differing by up to 5e3, corner coordinates ~ -1e4 px.
+   It passed earlier checks only because the GPU was idle. Fix: stream.wait_stream(current_stream) before the copy (system + refiner), own copies of fp32 outputs.
+   Consequence: the TRT-runtime closed-loop numbers (Update 150-152: 81.2 % at 128 deg, 78.1 % at 100, 18.8 % at 62) ran with the race while Isaac rendered on
+   the same GPU -> to be re-run; the research-path numbers are unaffected. The Orin would have hit it too (camera + engine share the GPU).
+2. Post-processing fast path (default; PFM_POST=torch = old): peaks + border filter on the GPU (top-k), ONE device->host copy, rules in numpy.
+   Equivalence on 296 frames (sim, real golden, 25-deg derotated, 1640x1232) under GPU load: 0 shape mismatches, max |diff| 1.2e-7.
+   One CPU core (5090 host, GPU shared): heads_post 1.09 -> 0.67 ms, confirm 0.30 -> 0.16 ms median.
+3. Seg gap: public Cityscapes Mask2Former Swin-L (scripts/eval_seg_teacher.py, mapped to v5 + v3 sky/vegetation): BDD 0.812 (ours 0.745), IDD-AW 0.666 (0.628),
+   real dark 0.623 (0.630); person 0.73 / 0.62 / 0.67 vs ours 0.51 / 0.39 / 0.42. other_obstacle is low for the teacher too (0.41 / 0.16 / 0.12): the class
+   (fence + sign + guard rail + billboard + barrier) is a taxonomy limit, not a capacity one. Confusion of ours: runs/modules/seg_refine/confusion.json.
+4. Pseudo-labels (scripts/make_seg_pseudo.py, conf >= 0.6 else ignore): ACDC all 8012 (adverse + clear reference) + Mapillary shard 0 (8329) -> labels_pseudo.
+   Seg module v2 (scripts/train_seg_module2.py): backbone stages_0/stages_1 taps + fused feature + core logits, stride-4 FPN decoder, 1.31 M params.
+5. Depth gap (scripts/eval_depth_teacher.py, AbsRel inverse fit): KITTI core 0.079 vs DA-V2-Small 0.051; DIODE indoor 0.132 vs 0.088; DIODE outdoor 0.260 vs 0.452
+   (teacher worse). Depth module (scripts/train_depth_module.py): same taps, residual inverse depth, SSI-L1 + gradient matching to DA-V2-S; selection keeps outdoor.
+6. Narrow lens diagnosis (in-loop perception, ours TRT): 62 deg found 33-40 % vs 84-86 % at 128 deg; large gates (>120 px) 22 % vs 54-68 %. Crop window
+   min side made configurable (CROP_MIN env, droneracing/adaptive_crop.py min_side; default unchanged) - not yet flown (deprioritised: gates already good).
+
+### Update 156 — Orin runtime: CUDA graphs, gate selection out of the graph, INT8 rejected; depth module rejected; seg module v2
+1. CUDA graphs in TrtBackend (system engine + one refiner context/graph per batch bucket 4/8/16/32/64, zero-padded): outputs bit-identical to
+   no-graph on 75 frames; engine 2.18 -> 1.40 ms on the 5090 (GPU shared). Orin trtexec measured -12..-21 % for this backbone (docs/ORIN_RESULTS.md).
+2. Per-layer TRT profile of system_448: 84 % of GPU time in myelin "Conc/Cast/Gather/Scatter" kernels = DenseHeads.decode_gdet's two 31-step
+   greedy loops unrolled into ONNX (x2 heads). Split (deploy/gdet_post.py): graph outputs top-32 candidates + pairwise "same gate" matrix,
+   numpy does keep (fixed-point = greedy, exact) + level merge (vectorised product). Equal to decode_gdet on 468 heads / 3741 slots (max 4.8e-7).
+   Graph 6,012 -> 725 ONNX nodes; engine (graph replay, min) 1.045 -> 0.808 ms; host select 350 -> 50 us/frame.
+   Device check: gates 24/24, max 0.60 px, ng 24/24, seg 99.68 %; vs fp32 torch on 276 frames: old p99 3.01 px, new 1.98 px.
+   Parity vs research detector (58 frames): 74/76 gates matched (old TRT bundle 53/76 - measured with the stream race).
+   Also fixed: check_device.py ignored the new output format (crashed silently), pack.sh missed calibrate_camera.py, file replay hung at video end.
+   Packaged copy rehearsed in a clean dir (python -I): checksums, build, check, run.py 600 frames 87 FPS (video-decode bound), capture->output 3.9 ms.
+3. INT8 rejected: post-training INT8 breaks accuracy (implicit entropy all layers: seg agree 0.555, gates 6/24; only stem+stages 0-1: 0.78, 22/24, 6 px;
+   min-max: worse; ModelOpt Q/DQ backbone-only: 0.27, 14/24) and the Orin gain for this backbone was measured at +3 % (docs/ORIN_RESULTS.md).
+4. Depth module (scripts/train_depth_module.py, distil DA-V2-Small): best mean relative gain 0.7 % (it 4000), DIODE outdoor never improves -> rejected.
+5. Seg module v2 (pseudo-labels + backbone taps, 1.31 M): BDD 0.736 -> 0.773, IDD-AW 0.611 -> 0.633, RUGD 0.505 -> 0.527, ADE flat, person BDD 0.51 -> 0.58;
+   but real dark test 0.609 (v1: 0.618) - the teacher is itself only 0.623 on real dark. Next: label-preserving synthetic night (night_real on labelled
+   images, P_NIGHT 0.3 / 0.5) in training.
+
+### Update 157 — synthetic-night supervision; seg v1+v2 ensemble ACCEPTED into the vehicle package
+Seg v2 + label-preserving night_real on labelled images (P_NIGHT): 0.3 -> real dark test 0.602 (worse); 0.5 -> 0.614 (v2 alone 0.609, v1 0.618). Not better than v1 on real night.
+Ensembles (mean of logits, full eval sets; core / v1 / v2 / v1+v2): BDD 0.736 / 0.745 / 0.773 / 0.766, ADE 0.595 / 0.595 / 0.596 / 0.598, IDD-AW 0.611 / 0.628 / 0.633 / 0.637,
+RUGD 0.505 / 0.512 / 0.527 / 0.522, real dark val 0.628 / 0.640 / 0.631 / 0.641, real dark test (report) 0.607 / 0.618 / 0.609 / 0.620 (v1+night05: 0.621 test but BDD 0.754).
+v1+v2 beats the deployed v1 on every set -> accepted. Exported (deploy/export_system.py, PFM_SEG2_ENS; split_mismatch 0, 24/24 gate sets), TRT check: gates 24/24 max 0.50 px,
+seg agreement 99.85 %; TRT runtime on eval sets: BDD 0.767, IDD-AW 0.637, RUGD 0.522, real dark val 0.641 / test 0.619. Engine 0.80 -> 0.92 ms (+15 %) on the 5090.
+Real night stays at ~0.62: the public Mask2Former Swin-L teacher gets 0.623 on the same frames; other_obstacle (fence + sign + barrier + billboard) is ~0.1 for both -> taxonomy limit.
+
+### Update 158 — FIRST RUN ON THE REAL ORIN NX (MAXN, TensorRT 10.16.2), phone as stand-in camera
+Access: user lovelace (sudo); torch 2.15 cu132 only in /home/haktan/PerceptionModel/.venv -> package run as haktan with that venv; system TensorRT 10.16.2.
+Engines built on the device with trtexec (system 9 min, 24.9 MB). Device check vs PyTorch reference: gates 24/24 max 0.75 px median 0.28, ng 24/24 0.36 px,
+seg 99.9 % same class, depth 0.3 % rel -> the Orin engines match.
+trtexec GPU compute: system 27.5 ms (CUDA graph 25.7), refiner 16 patches 3.7 ms. Per-layer: backbone 14.7 ms (53 %), seg module v2 4.5, seg v1 2.3,
+NG 1.7, CPK 1.4, gate head 1.2 ms. (5090-based estimate was ~17-19 ms engine: too optimistic; the stride-4 heads cost far more on the Orin.)
+End to end, 1640x1232: first 55.4 ms (refiner 17.0, heads_post 6.2). Fixes, each checked bit-identical on 176-194 frames:
+ - sample_patches copied the whole frame per corner (img[bidx]): one grid_sample on the frame -> 12.1 -> 4.0 ms; total 50.8 ms.
+ - CUDA graphs for gpu_peaks and the refiner chain (sampling -> engine -> read-out, per gate-count bucket), persistent frame buffer -> total 39.9 ms
+   (heads_post 2.45, refiner 5.1, engine+select 29.7).
+Live: phone IP-camera (laptop hotspot -> SSH reverse tunnel -> Orin url source), 600 frames, 19.4 FPS / capture->output 57 ms before the fixes.
+Seen on the phone frames (office): person found when facing the camera, missed from behind / seated / small behind monitors; a hanging jacket once
+labelled person; walls/ceiling mostly other_obstacle; depth plausible. Phone upright sends sideways frames: run.py --rotate 90.
+
+### Update 159 — Orin speed: CUDA graphs for post, pipelining; 30 FPS reached
+Orin (MAXN, phone frames preloaded): sync 30.4 FPS (32.9 ms), pipelined (double-buffered TRT slots, deploy/pfm_runtime.py step()) 32.4 FPS; 0/108 frames differ.
+Earlier the same day: sample_patches copied the frame per corner (12.1 -> 4.0 ms), CUDA graphs for gpu_peaks + refiner chain: 55.4 -> 39.9 ms with gates (check_device).
+GPU is now the bottleneck (~26 ms system engine + ~4 ms post kernels).
+
+### Update 160 — scene router + split bundle (outdoor head = seg v2, indoor head = indoor module), run-time switch
+scripts/fit_scene_router.py: logistic regression on the pooled core feature, indoor (SUN, COCO indoor) vs outdoor (BDD, IDD-AW, RUGD, UAV, COCO outdoor):
+test 97.8 % (indoor 97.7, outdoor 98.0), Orin phone office frames 36/36 indoor. PFM_SPLIT=1 export: system graph exposes taps (s4, s8, feat, seg_core, s16);
+head engines seg2_head (= v1+v2 mean, 99.97 % same seg as the monolithic bundle) and indoor_head; the runtime launches one head per frame chosen by the router
+(hold 3 frames, previous frame's decision -> no GPU wait); check_device over all heads: gates 72/72, seg 99.6 %, seg_in 99.5 %.
+
+### Update 161 — indoor 22-class module (mouse, keyboard, monitor, laptop, chair, table, ...): data, teacher, students
+Classes: src/pfm/indoor_classes.py. Data: COCO panoptic val (4000 train / 1000 indoor test with REAL labels = data/general/eval_coco_in) + train2017 indoor
+(51,815 real) + COCO-panoptic Mask2Former Swin-L pseudo labels on SUN / ADE (TTA). Teacher on the test (all pixels): 0.746, TTA (3 scales x flip) 0.757;
++OneFormer ensemble 0.756 (no gain) -> remaining teacher errors are label ambiguity (door/wall, laptop keyboard, paper on table, chair/sofa).
+Hazır M2F zero-shot with the mapping: Swin-T 0.716, Swin-S 0.721, Swin-B 0.730 (800 px) - too big for the Orin pipeline, not used.
+Students on the frozen core (test mIoU): v1 head 0.272, v2 (+stride-16 PPM) 0.329, v3 (trainable copy of stages_2) 0.384 (small data),
+v3 + 56k real + Swin-L soft-label distillation (KL on the stride-4 grid) + repeat-factor sampling + width 128: 0.600 (monitor 0.72, laptop 0.64,
+keyboard 0.61, mouse 0.50, chair 0.44, person 0.85). Bar set by the user: >= 0.67 (90 % of the teacher). Running: v3 continued 30k, v5 (whole-backbone copy).
+Fixes on the way: PPM adaptive pooling -> exact matrix pooling (ONNX), Isaac indoor render hung at room 196 (stopped; 96 rooms rendered).
+
+### Update 162 — indoor: own students plateau ~0.62-0.64; Swin-T Mask2Former as the indoor module, on the Orin at 23 FPS
+Own students (real COCO indoor test): ARCH 3 cont 0.609, ARCH 5 (whole-backbone copy) 0.614, ARCH 7 (mask-classification, 50 queries, HF Mask2FormerLoss + KD)
+0.624, ARCH 7 aspect-preserving fine-tune 0.640. On real office frames all still fragmented (user: "parça parça"). Probability smoothing: no gain.
+Found: the pipeline squashes upright phone frames 1080x1920 -> 448x448 (1.8x); aspect-preserving input helps visibly.
+Decision (user, option a): pretrained Mask2Former Swin-Tiny COCO-panoptic (zero-shot with the 133->22 mapping: 0.696 at 448, 0.716 at 800) = indoor module.
+Export fixes: (1) HF deformable attention exported its sampling grid as float64 -> Cast to float32 before every GridSample (ONNX == torch 100 %);
+(2) my TRT test copied the input on the default stream without sync (same race as Update 155) -> fixed; (3) the 6 deformable-attention layers were
+~75 % of the Orin time (130 ms) -> exported as TensorRT MultiscaleDeformableAttnPlugin_TRT nodes (deploy/export_m2f_indoor.py, PLUGIN=1): Orin fp16 49 ms
+(CUDA graph 46), 5090 2.4 ms, agreement with torch 93-100 % (fp16) / 99-100 % (fp32).
+Pipeline: head "m2f" in the split bundle (deploy/bundle_m2f), reads the system engine's 448 input buffer (no copy), runs every 3rd frame (head_every),
+router picks it indoors. Orin: device check 96/96 gates over 4 heads, outdoor 30.6 FPS, indoor 23.0 FPS (pipelined). Office capture labelled on the Orin:
+whole persons / chairs / monitors / laptops / keyboards / mice, coherent regions.
+Deployed m2f engine (TensorRT fp16, 448 squash) on the full real COCO indoor test (1000): mIoU 0.687 (monitor 0.78, laptop 0.70, keyboard 0.62, mouse 0.79,
+chair 0.60, person 0.90, table 0.68) -> above the 0.67 bar. Orin indoor FPS vs m2f period: every 3 -> 23.0, 4 -> 25.2, 5 -> 26.8, 8 -> 29.5, 10 -> 30.6
+(= outdoor). Default head_every m2f = 10 (indoor map refreshed ~3 Hz, the rest of the stack at 30 FPS).
+
+### Update 163 — OUR indoor student: Swin-T Mask2Former fine-tuned + distilled (22 classes), on the Orin at 30.5 FPS
+scripts/finetune_m2f_indoor.py: init from public COCO-panoptic Swin-T Mask2Former; 22-class head = logsumexp of member COCO logits (starts exactly at the
+zero-shot model); data 55.5k real COCO indoor + 7k TTA-teacher SUN/ADE; Hungarian mask loss + KL to the Swin-L teacher probabilities (stride-4 grid);
+20k it, bs 8, 448 crops. Val 0.737 -> 0.755. Real COCO indoor test (1000, 448 squash, like the vehicle): torch 0.6954, TensorRT fp16 0.6955
+(monitor 0.79, laptop 0.72, keyboard 0.65, mouse 0.80, chair 0.60, person 0.90) vs zero-shot 0.687. Bar 0.67 met with our own weights.
+Export bug: the grouped logsumexp head overflows in TRT fp16 (test 0.099) -> export uses the 133+1 linear head + softmax + member sum (identical values).
+Orin: 47.4 ms per m2f pass (CUDA graph); bundle pfm_m2f: gates 96/96, indoor 30.5 FPS with head_every 10; office capture re-labelled on the Orin.
+Outdoor (started): frozen-core 19-class head on BDD raw labels: BDD 0.479, real dark 0.373 (Swin-L Cityscapes 0.603 / 0.394, Swin-T 0.527 / 0.259).
+Literature review: docs/literatur/kenar-segmentasyon-damitma-neyi-yanlis-yapiyoruz.md.
+
+### Update 164 — OUR outdoor student (19 Cityscapes classes) + both fine modules on the Orin at 30.6 FPS
+Outdoor student: Swin-T Mask2Former, init public Cityscapes weights, fine-tuned on BDD100K raw 19-class labels (6.7k), 448 crops, 20k it.
+Test (448 squash): BDD 19-class torch 0.617 / TensorRT fp16 0.613; REAL dark torch 0.472 / TRT 0.471 — bar (>= 0.60 / >= 0.40) met, above the zero-shot
+Swin-L teacher at 1024 px (0.603 / 0.394) and far above the frozen-core head (0.479 / 0.373). bicycle 0.14 -> 0.67, rider 0.02 -> 0.54, bus 0.38 -> 0.72.
+Orin bundle pfm_m2f: heads seg2, indoor, m2f (indoor 22), m2f_out (outdoor 19, output "seg_fine"), router picks m2f indoors / m2f_out outdoors, each every
+10th frame; device check 120/120 gates over 5 heads; outdoor 30.6 FPS, indoor 30.6 FPS (pipelined).
+
+### Update 165 — 60 FPS push, lossless part: 30.6 -> 40.1 FPS on the Orin (gates unchanged 120/120); compatible SA12 core training
+User target (2026-11-24): get as close to 60 FPS as possible (drone up to 20 m/s). All numbers Orin NX MAXN, TensorRT fp16, pipelined, 1640x1232 frames.
+1. Drone bundle (`PFM_DRONE=1` in export_system.py, deploy/bundle_drone448, Orin ~/pfm_drone448): system graph = core + gate/depth heads only, SegRefine v1 moved
+   into the seg2 head (Seg12HeadWrap), head_every seg2/indoor 3, m2f/m2f_out 10. 30.6 -> 33.1 FPS. `PFM_S` env = input side; build_engines.py / runtime read
+   the system graph name from bundle.json.
+2. nsys profile (`--capture-range=cudaProfilerApi`, `--cuda-graph-trace=node`): the frame prep made the persistent frame buffer NCHW-contiguous = full-frame
+   transpose copy 2.9 ms + float + /255 passes. _prep now keeps the camera HWC layout (channels-last NCHW view), one conversion + one in-place scale. 33.1 -> 36.3.
+3. Same profile: FastViT downsample convs (7x7 s2, groups = in, out = 2 x in) ran as one fp32 GEMM per group (192 launches, 4.4 ms). `fix_grouped_convs` in
+   export_system.py rewrites them exactly (repeat channels + depthwise, same weights; max diff 1e-5). System engine 20.2 -> 17.3 ms; 36.3 -> 40.1 FPS.
+4. Refiner buckets per gate count (no padded patches). Refiner engine = 0.24 ms per 64x64 patch (linear); width 16 only 3.8 -> 2.2 ms at 16 patches.
+Device check: gates same set 120/120, depth rel 0.004; seg agreement 0.998 / indoor 0.996 with every head on every frame (the 0.22 with head_every is the
+check comparing stale maps across unrelated test frames, not an error).
+Literature (docs/literatur/hizlandirma-dogruluk-literatur-taramasi.md, CNN-focused): depthwise-heavy blocks are memory-bound on GPUs (FasterNet, LowFormer,
+Beyond MACs) -> INT8 gives little; resolution fine-tune + distillation (FixRes, MSAD) and a GPU-friendly feature-compatible core are the big levers.
+Compatible core (scripts/train_core_compat.py, runs/core_sa12, tmux coresa12 on the 5090): FastViT-SA12 stages 0-2 (same widths 64/128/256) trained to
+reproduce v4's taps s4/s8/fmap + pyramid + frozen-head outputs (no labels), 448 + 384 mixed; v4 pyramid/heads/plug-ins reused unchanged. SA12 system
+(random weights) on the Orin: 15.9 ms vs SA24 19.3 ms (before the grouped-conv fix). Acceptance: red / TII gate recall, seg/depth/lane sets within ~1 pt of v4.
+`PFM_HYBRID_NAME` env sets the hybrid backbone for PerceptionModel (default fastvit_sa24).
+New docs: docs/PROJE_TAMAMI.md (whole project in Turkish).
+
+### Update 166 — IMX219 on the Orin (CAM1), calibration, colour, camera path + async heavy heads: 41 FPS live, 44.5 FPS bench
+- Camera: IMX219 with a wide M12 lens on CAM1 via the Raspberry Pi "Standard-Mini" 15->22 pin cable; overlay "Camera IMX219 Dual" (jetson-io,
+  /boot/extlinux backup extlinux.conf.bak_before_imx219). Sensor modes: 3280x2464@21, 3280x1848@28, 1920x1080@30, 1640x1232@30, 1280x720@60.
+  First run had CSI corr_err + "imx219: Error writing mode" (loose ribbon); after reseating: 0 errors in 1800 frames.
+- Calibration (screen checkerboard 9x6 inner, 3.2 cm squares, 3 captures, 122 sharp frames after outlier rejection, fisheye model): rms 1.1 px,
+  fx 784 fy 782 cx 777 cy 685 @1640x1232; FOV ~120-125 deg H, ~92 deg V (diagonal ~150-170, corners thinly covered). deploy/camera_imx219_cam1.json
+  (also on the Orin in ~/pfm_drone448). Undistort to 100 deg (110 shows the raw frame's bottom edge: principal point below centre).
+- Colour: auto white balance gives a strong magenta cast (R/G 1.45, B/G 1.45 under the workshop LEDs; ISP tuning is NVIDIA's own IMX219 module);
+  wbmode=3 (fluorescent) looks natural indoors. `PFM_ARGUS` env passes nvarguscamerasrc options (e.g. PFM_ARGUS=wbmode=3). IR filter presence unknown
+  (no remote control for the test). Live indoor module with calib + wbmode=3: person, chairs, table, monitor, keyboard, ceiling/wall/window found;
+  monitor mask bleeds into dark background; without calib/colour it painted equipment panels as "keyboard".
+- Camera path: the venv's pip OpenCV has no GStreamer -> camera.GstPipe reads gst-launch (nvarguscamerasrc -> nvvidconv -> fdsink) through a pipe,
+  restarts it if it dies; NV12 instead of BGRx (1.5 vs 4 B/px), converted to RGB on the GPU in GatePerception._prep (BT.601 video range).
+  Raw 1280x720@60 NV12 capture: 60.1 fps. Killing a capture process can leave nvargus-daemon broken (NvBufSurfaceFromFd Failed) ->
+  `sudo systemctl restart nvargus-daemon`. Never `pkill -f` from an ssh command line (kills its own shell).
+- cProfile: the host was not the bottleneck (it spin-waits on CUDA events); the 47 ms Mask2Former module ran in the gate stream every 10th frame.
+  TrtBackend now runs heads listed in PFM_ASYNC_HEADS (default m2f,m2f_out) on a low-priority stream with private input buffers; the system engine
+  is on the high-priority stream; the module map is refreshed when its run finishes. Bench 40.1 -> 44.5 FPS (gates and seg identical, 0 mismatches);
+  live 720p60 + undistort: 34 -> 41 FPS, capture->output p95 107 -> 79 ms, median 55 ms. Device check gates 120/120.
+- SA12 compatible core v2 (gate-weighted loss + cpk/ng targets, 30k it from v1 10k): red / TII gates within 20 px 0.957 / 0.937 at 448 (v4 0.990 /
+  0.976), 0.925 / 0.898 at 384; seg agreement 0.95. Not accepted (> 1 pt gap).
+- 384 system engine (drone, taps, grouped-conv fix): 11.3 ms vs 17.3 ms at 448. Gate heads for 384: scripts/train_gates384.py = self-distillation from
+  the 448 system (copy of core.dense.gdet + cpk + ng trainable, backbone/pyramid frozen; teacher absolute corners resampled to the student grid),
+  runs/gates384. export_system.py: PFM_CPK / PFM_NG env for the head checkpoints.

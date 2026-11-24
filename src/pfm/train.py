@@ -355,6 +355,8 @@ def run(cfg_path):
         for k, v in cfg["seg_class_weights"].items(): seg_w[CLASSES.index(k)] = float(v)
     start = 0
     ck = out_dir / "last.pt"
+    if cfg.get("init_from") and not ck.exists():      # warm start from the plain state dict of an earlier final.pt (fine-tune / model-soup members)
+        model.load_state_dict(torch.load(cfg["init_from"], map_location=dev)); print(f"initialised from {cfg['init_from']}")
     if ck.exists():
         s = torch.load(ck, map_location=dev)
         model.load_state_dict(s["model"]); opt.load_state_dict(s["opt"]); sched.load_state_dict(s["sched"]); start = s["epoch"] + 1

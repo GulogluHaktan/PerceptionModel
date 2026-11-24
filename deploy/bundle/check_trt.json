@@ -1,0 +1,24 @@
+{
+ "backend": "trt",
+ "frames": 24,
+ "depth_rel": 0.00556,
+ "seg_agree": 0.99601,
+ "cpk_heat": 0.20743,
+ "cpk_off_at_peaks": 0.00218,
+ "pooled_rel": 0.00286,
+ "seg_agree_mean": 0.99852,
+ "gates_same_set": 24,
+ "gates_max_px": 0.5,
+ "gates_median_px": 0.255,
+ "ng_same_set": 24,
+ "ng_max_px": 0.429,
+ "latency_ms_median": {
+  "prep": 0.31,
+  "engine": 1.2,
+  "heads_post": 0.45,
+  "refiner": 0.9,
+  "confirm": 0.13,
+  "total": 2.98
+ },
+ "camera": "1640x1232"
+}

@@ -17,3 +17,9 @@ Status: v0 pipeline verified end to end on a laptop GPU (see docs/MONDAY.md for 
 
 ## Pipeline (ready for the 5090)
 `scripts/setup_5090.sh` -> `scripts/cache_teachers.py <cfg>` -> `scripts/train.py <cfg>`; configs in `configs/` (`smoke.yaml` fake, `v0_5090.yaml` real). See `docs/MONDAY.md`.
+
+## Vehicle camera (IMX219, Jetson Orin NX)
+The custom wide high-frame-rate sensor modes (1640x616 @ 84 fps, 1640x864 @ 60 fps, full ~122 deg width), the driver build, raw capture and
+the GPU ISP are in **https://github.com/GulogluHaktan/IMX219_Camera_Driver**. This repo uses them through `deploy/v4l2raw.py` and
+`deploy/pfm_runtime.py` (`_prep_raw`); live run: `deploy/run.py --source raw:7 --calib deploy/camera_imx219_cam1_1640x616.json --hfov 100`,
+car / drone test with every raw frame saved: `deploy/car_test.sh`. Whole project overview (Turkish): `docs/PROJE_TAMAMI.md`.

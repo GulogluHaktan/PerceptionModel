@@ -1,0 +1,7 @@
+# R39 (release), REVISION: 2.1, GCID: 46758480, BOARD: generic, EABI: aarch64, DATE: Fri Aug  7 05:54:22 AM UTC 2026
+6.8.12-1021-tegra
+NV Power Mode: MAXN
+0
+               total        used        free      shared  buff/cache   available
+Mem:           7.4Gi       856Mi       5.8Gi        16Mi       925Mi       6.5Gi
+/dev/nvme0n1p1  915G   47G  822G   6% /

@@ -1,0 +1,44 @@
+{
+    "Summary": "The paper asks whether a released, frozen multi-task edge perception model can be extended to a precision-critical application without modifying its weights. The model is a ~8M-parameter FastViT-SA24 hybrid student with segmentation, inverse-depth, lane and gate-corner heads.\n\nThree application-trained heads read the core's frozen stride-8 features:\n- CornerRefiner, for sub-pixel corner correction.\n- CornerPeakHead, for confirming weak detections.\n- NearGateHead, for frame-filling gates.\n\nTwo parameter-free steps follow: global NMS at IoU 0.2 and a 14 px minimum-size filter. The pipeline replaces only the gate detector (GateNet) of a third-party Isaac Lab drone-racing stack, which consists of a learned policy plus an EKF.\n\nOn 128 held-out final-test flights, the system succeeds in 87.5% of flights versus 82.0% for GateNet. The difference is not significant (sign test p\u22480.14), and the authors interpret it as parity. General metrics are unchanged by construction.\n\nThe paper also reports in-loop diagnostics: corner error by gate size, the catastrophic effect of duplicate detections on the EKF, and EKF error by distance. Jetson Orin NX timings show that structural reparameterization brings the core to 26.4 ms at 15 W.",
+    "Strengths": [
+        "Unusually candid framing. The paper acknowledges that non-regression is a trivial identity, claims parity rather than superiority, and lists its limitations openly.",
+        "Careful closed-loop protocol. Validation, development-check and final-test seeds are explicitly separated, final-test seeds are untouched until the configuration is frozen, and seed-level sign tests account for within-seed correlation.",
+        "Meaningful evaluation design. The paper uses closed-loop evaluation in a third-party stack where only the detector is swapped, and shows that offline metrics failed to predict closed-loop failure.",
+        "Informative in-loop diagnostics. Corner error is binned by gate size, the duplicate-detection rate is identified as the predictor of EKF collapse, and EKF error is binned by distance, including the regime where the proposed system is worse.",
+        "Practically relevant Orin NX deployment numbers, plus a thoughtful note on preserving numerical identity under fp16 by using separate TensorRT engines.",
+        "Negative results are reported transparently, including core retraining attempts, loss reweighting, the stride-2 head, model soups and failing interface variants."
+    ],
+    "Weaknesses": [
+        "Limited originality. Frozen-trunk extension with new heads and standard post-processing is well established. The contribution reduces to a single empirical case study with one simulator, one stack and one baseline.",
+        "The central efficiency motivation (avoiding a second backbone pass) is unsubstantiated:\n- Module and post-processing latency on the Orin is not measured.\n- GateNet's parameters, latency and energy are never reported.\n- NearGateHead is itself a small detector.\n- With only ~6.9 ms of headroom at 15 W, these measurements are essential.",
+        "The plug-in modules are essentially unspecified: no architectures, parameter counts, training data, losses, target generation or training schedules are given. The work is not reproducible, and the claim that the heads are 'small' cannot be assessed.",
+        "The comparison is asymmetric. NMS, the min-size filter and detection thresholds were tuned in-loop only for the proposed pipeline. GateNet was not evaluated with matched post-processing, which could account for the 5.5-point (already non-significant) gap.",
+        "The final configuration has no ablation. The development path is cumulative and chronological, most step differences lie within the \u00b110\u201315 point loop noise, and CornerRefiner is retained despite showing no measurable loop gain. In-loop corner error for the final system is never reported.",
+        "Parity is inferred from a failure to reject the null (17 non-tied seeds). No equivalence test with a pre-specified margin and no confidence interval on the success difference are provided. Heavy iterative use of development-check seeds also raises researcher-degrees-of-freedom concerns.",
+        "The claim that modifying the core does not help is supported only qualitatively. Natural alternatives, such as adapters or LoRA, fine-tuning a copy of the core, or the same heads on a generic backbone or on GateNet features, are not evaluated.",
+        "Evaluation is simulation-only.\n- The full module pipeline is never evaluated on real gates; the real-gate numbers apply only to the core's head.\n- The core was already trained on racing gates, which limits conclusions about extending general models to genuinely new tasks.\n- General metrics are reported at 448 px while deployment runs at 384 px.\n- Far-gate estimator error is worse than GateNet's.",
+        "Related work is thin and omits the side-tuning and frozen-backbone extension literature, as well as relevant drone-racing gate-detection work."
+    ],
+    "Originality": 2,
+    "Quality": 2,
+    "Clarity": 3,
+    "Significance": 2,
+    "Questions": [
+        "What are the architectures, parameter counts and FLOPs of CornerRefiner, CornerPeakHead and NearGateHead? What data (simulator renders and/or real gates) and losses were used to train them?",
+        "What is the measured Orin NX latency and energy of the core plus modules plus post-processing, compared with running the core and GateNet side by side? What are GateNet's own latency, energy and parameter count?",
+        "How does GateNet perform with the same NMS and min-size filter tuned on the same validation seeds?",
+        "Can you provide a leave-one-module-out ablation of the final configuration on fresh held-out seeds, along with in-loop corner error for the final system?",
+        "Can you report a confidence interval on the success difference and an equivalence test with a pre-specified margin?",
+        "What are the quantitative closed-loop results and general-metric changes for the core-modification attempts? Were adapter or LoRA variants tried?",
+        "How does the full pipeline perform on the real gate sets, and how dependent is the result on the core having been trained on gates?",
+        "Can you report general metrics at the deployed 384 px resolution?"
+    ],
+    "Limitations": "The authors acknowledge:\n- Simulation-only evaluation.\n- A single application and baseline.\n- A non-significant difference.\n- Worse far-gate estimation.\n- Unmeasured module latency.\n- Mismatched seed subsets in the min-size sweep.\n\nAdditional limitations not acknowledged:\n- No equivalence analysis supporting the parity claim.\n- Asymmetric post-processing tuning between the two arms.\n- Missing module specifications and training data.\n- No evaluation of the full pipeline on real imagery.\n- No comparison with adaptation-based alternatives.\n- A core already trained on the target object class.\n- General metrics validated at a resolution different from deployment.\n\nThe dual-use note on agile drone perception is appropriate but brief.",
+    "Ethical Concerns": false,
+    "Soundness": 2,
+    "Presentation": 3,
+    "Contribution": 2,
+    "Overall": 3,
+    "Confidence": 4,
+    "Decision": "Reject"
+}

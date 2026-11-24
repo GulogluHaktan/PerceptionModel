@@ -1,0 +1,1 @@
+{"model": "facebook/mask2former-swin-tiny-coco-panoptic", "input": [448, 448], "classes": ["road", "sidewalk", "building", "wall", "fence", "pole", "traffic_light", "traffic_sign", "vegetation", "terrain", "sky", "person", "rider", "car", "truck", "bus", "train", "motorcycle", "bicycle"], "onnx_vs_torch_agree": null}

@@ -1,0 +1,110 @@
+% CVPR 2025 Paper Template; see https://github.com/cvpr-org/author-kit
+
+\documentclass[10pt,twocolumn,letterpaper]{article}
+\usepackage{cvpr}           
+
+\input{preamble}
+
+% It is strongly recommended to use hyperref, especially for the review version.
+% hyperref with option pagebackref eases the reviewers' job.
+\definecolor{cvprblue}{rgb}{0.21,0.49,0.74}
+\usepackage[pagebackref,breaklinks,colorlinks,allcolors=cvprblue]{hyperref}
+
+\def\paperID{12345678}
+\def\confName{CVPR}
+\def\confYear{2025}
+
+%%%%%%%%% TITLE - PLEASE UPDATE
+\title{My Title}
+
+\author{Ambitious AI Researcher\\
+AI Research Institute\\
+123 AI Avenue, ML City\\
+{\tt\small researcher@institute.ai}
+}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+%%%%%%%%% ABSTRACT %%%%%%%%%
+Abstract here.
+%%%%%%%%% ABSTRACT %%%%%%%%%
+\end{abstract}
+
+\section{Introduction}
+\label{sec:intro}
+%%%%%%%%% INTRODUCTION %%%%%%%%%
+Small autonomous robots such as drones and ground vehicles must perceive their surroundings with an onboard computer of a few watts. They are increasingly built around a \emph{single} multi-task perception model. One shared network that predicts semantic segmentation, inverse depth, lanes and object keypoints is attractive on an edge device such as the NVIDIA Jetson Orin NX. It needs one set of weights in memory and one forward pass per frame. It also offers one energy budget and one artifact to validate, update and maintain. Training such a model on many real and synthetic datasets, and distilling it into a compact student, yields a general perception core that serves many applications at once.
+
+This promise breaks when one application needs much higher precision on a single task than a general model provides. Autonomous drone racing is a demanding example. Vision-based racing systems detect gate corners and fuse them in a filter-based state estimator to correct drift and localize relative to the track~\cite{Foehn2020AlphapilotAutonomous}. Learned racing policies push quadrotors to their physical limits~\cite{Song2023ReachingLimit}. At such speeds, the estimator tolerates only one to two pixels of corner error. Practitioners usually respond in one of two ways. The first is to deploy a separate task-specific network, which adds a second model to the onboard budget and gives up the single-model design. The second is to fine-tune the shared model on the target task. Fine-tuning causes catastrophic forgetting, so performance on the other tasks drops when the weights are specialized~\cite{Kirkpatrick2016OvercomingCatastrophic,Wang2023ComprehensiveSurvey}. Multi-task learning has a related problem: re-weighting losses toward one task trades accuracy on the others and does not reliably improve the target task~\cite{Xin2022DoCurrent,Lin2023DualbalancingMultitask}.
+
+We take a third route. We keep the general multi-task model \emph{completely frozen} and extend it with small plug-in modules that only \emph{read} its intermediate features. Each module adds a capability or extra precision for one application and never writes to the core. Removing a module therefore restores the original model bit-for-bit, so the general metrics cannot regress by construction. This property is stronger than what common parameter-efficient methods provide. Prompt tokens and adapters keep the backbone weights fixed but still alter its forward pass~\cite{Jia2022VisualPrompt,Chen2022AdaptformerAdapting,Chen2022VisionTransformer}. Weight-space interpolation produces a new weight set rather than the original model~\cite{Wortsman2021RobustFinetuning}.
+
+A second lesson shapes how we evaluate modules: offline metrics can be misleading. In the instance we study, a module that improved offline crop metrics such as found rate and corner ordering could still collapse the closed loop. One gate detected twice was enough to crash the estimator. We therefore judge every module in the closed loop of the target application. We choose settings on separate validation seeds and report results on never-used test seeds.
+
+We study one instance of this approach in simulation. The core is an $\sim$8M-parameter hybrid FastViT-SA24 student with heads for segmentation, inverse depth, lanes and dense gate corners. When reparameterized, it runs at 26.4\,ms per frame on a Jetson Orin NX in 15\,W mode. The application is a third-party drone racing stack in Isaac Lab, made of a learned racing policy and an EKF state estimator. The stack comes with its own simulator-trained gate detector, GateNet, which serves as our baseline. We swap only the detector; the policy, estimator and camera pipeline stay unchanged.
+
+Fine-tuning the core on simulator renders gave no closed-loop gain within loop noise. So did higher corner loss weights, a stride-2 corner head and model soups, and their cost on general metrics grew with the corner weight. Diagnosis in the loop showed that the gap to GateNet came from pixel precision rather than recall. We closed it with three modules on frozen stride-8 features. A \emph{CornerRefiner} performs second-pass sub-pixel refinement. A \emph{CornerPeakHead} confirms weak detections. A \emph{NearGateHead} handles gates that fill the frame. Two parameter-free filters complete the pipeline: global duplicate suppression and a minimum-size filter.
+
+Our contributions are:
+\begin{itemize}
+    \item A \emph{frozen-core, plug-in} design for extending a general multi-task perception model. Modules only read intermediate features, so general metrics are preserved exactly. For example, TuSimple lane IoU stays at 0.803 and SUN RGB-D mIoU at 0.749 with and without the modules.
+    \item A closed-loop study of drone racing in simulation, with validation and test seeds kept separate. It shows that offline detection metrics did not predict closed-loop success. Pixel-level corner precision and duplicate-free outputs mattered more than found rate.
+    \item Evidence that the frozen core plus light modules can match a dedicated, application-trained detector in closed loop. On two independent sets of never-used test seeds (128 flights per arm), our system completes 87.5\% of flights versus 82.0\% for GateNet. The difference is consistent across both tests but not significant at $p<0.05$ (sign test $p\approx0.14$). The core also keeps its general abilities, including 0.987 of real-gate corners within 20\,px at a never-seen real location, where GateNet reaches 0.776.
+\end{itemize}
+All closed-loop results are in simulation. We study one application against one dedicated baseline and make no claims about real flights or other applications.
+%%%%%%%%% INTRODUCTION %%%%%%%%%
+
+\section{Related Work}
+\label{sec:related_work}
+%%%%%%%%% RELATED WORK %%%%%%%%%
+\paragraph{Multi-task and efficient perception backbones.}
+A shared encoder with several task heads is a natural fit for resource-constrained robots. It amortizes computation across segmentation, depth, lanes and keypoints. The central difficulty is interference among tasks. Loss and gradient scales differ, and the dominant task can degrade the others. Many multi-task optimization methods address this by re-weighting losses or manipulating gradients. Dual-balancing~\cite{Lin2023DualbalancingMultitask}, for instance, applies a logarithmic transform to each loss and normalizes gradient magnitudes. However, a large-scale study found that specialized multi-task optimizers often fail to improve over a well-tuned weighted sum of losses~\cite{Xin2022DoCurrent}. This suggests that per-task accuracy in a shared model is bounded by a real trade-off and not just by the choice of optimizer. Our experience is consistent with this view. Raising the corner loss weight (10, 40 or 100) increased the cost on general metrics without a measurable closed-loop gain. We therefore leave the multi-task balance of the core as it is. Precision is added outside the core, through modules that read its features, so the general tasks are untouched.
+
+\paragraph{Extending pretrained models without forgetting.}
+Fine-tuning a pretrained network on a new objective overwrites weights that earlier tasks rely on, which leads to catastrophic forgetting. Regularization methods such as elastic weight consolidation slow down learning on weights important for old tasks~\cite{Kirkpatrick2016OvercomingCatastrophic}. The continual learning literature frames the broader problem as a trade-off between stability and plasticity~\cite{Wang2023ComprehensiveSurvey}. Weight-space ensembling such as WiSE-FT~\cite{Wortsman2021RobustFinetuning} interpolates between a pretrained and a fine-tuned model to recover robustness, but the result is still a modified set of weights.
+
+Parameter-efficient transfer methods keep the backbone weights frozen and train a small number of new parameters. Visual Prompt Tuning~\cite{Jia2022VisualPrompt} prepends learnable tokens to the input sequence. AdaptFormer~\cite{Chen2022AdaptformerAdapting} inserts lightweight parallel modules into the MLP blocks of a ViT. ViT-Adapter~\cite{Chen2022VisionTransformer} adds a dense-prediction adapter that injects image priors into a plain ViT. These methods reduce storage per task and can match or exceed full fine-tuning. However, prompts and adapters placed inside the network change the activations of the original forward pass, so the original outputs are not guaranteed to be preserved. They are also evaluated mainly on offline benchmarks.
+
+Our modules differ in two ways. First, they only read frozen intermediate features and never feed back into the core, so removing them restores the original model bit-for-bit. Second, we select and validate them in the closed loop of the application. As a point of comparison, in our setting fine-tuning, stronger corner losses, a stride-2 head and model soups all failed to improve closed-loop success.
+
+\paragraph{Gate detection and perception-in-the-loop for drone racing.}
+Vision-based autonomous drone racing couples a gate detector with state estimation and planning or control. AlphaPilot~\cite{Foehn2020AlphapilotAutonomous} uses learned gate detection with nonlinear filtering. It exploits multiple simultaneous gate detections to compensate for drift and build a global gate map. Song~\etal~\cite{Song2023ReachingLimit} show that reinforcement learning policies can outperform optimal control in racing because they optimize a task-level objective directly. Their result highlights that closed-loop performance depends on factors that intermediate objectives do not capture.
+
+The racing stack we build on follows this pattern: a learned policy is fed by an EKF that fuses a map prior with gate-corner observations. The stack ships with its own detector, GateNet, trained on simulator data. Such dedicated detectors are accurate in distribution, but they are single-purpose and add a separate network to the onboard budget. In our offline evaluation at a never-seen real location, GateNet places 0.776 of corners within 20\,px, compared with 0.987 for our general core.
+
+Offline detection metrics also miss failure modes that matter in the loop. In our study, duplicate detections of a single gate crashed the estimator even when offline found rate and corner ordering looked favorable. GateNet is the only method we compare against directly. We replace only the detector, keep the policy, estimator and camera pipeline fixed, and report closed-loop success on never-used seeds.
+%%%%%%%%% RELATED WORK %%%%%%%%%
+
+\section{Methodology}
+\label{sec:method}
+%%%%%%%%% METHOD %%%%%%%%%
+Methodology here.
+%%%%%%%%% METHOD %%%%%%%%%
+
+\section{Experiments}
+\label{sec:experiments}
+%%%%%%%%% EXPERIMENTS %%%%%%%%%
+Experimental setup, results, and analysis here.
+%%%%%%%%% EXPERIMENTS %%%%%%%%%
+
+\section{Conclusion}
+\label{sec:conclusion}
+%%%%%%%%% CONCLUSION %%%%%%%%%
+Conclusion here.
+%%%%%%%%% CONCLUSION %%%%%%%%%
+
+{
+    \small
+    \bibliographystyle{ieeenat_fullname}
+    \bibliography{references}
+}
+
+%%%%%%%%% Appendix %%%%%%%%%
+% If you want to add appendix, uncomment the following lines:
+% \appendix
+% \section{xxx}
+%%%%%%%%% Appendix %%%%%%%%%
+
+\end{document}

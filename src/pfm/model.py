@@ -164,8 +164,9 @@ class DenseHeads(nn.Module):
 
 class PerceptionModel(nn.Module):
     def __init__(self, backbone: str = "vit", teacher_dims: dict[str, int] | None = None,
-                 pretrained: bool = False, hybrid_name: str = "fastvit_sa24"):
+                 pretrained: bool = False, hybrid_name: str | None = None):
         super().__init__()
+        hybrid_name = hybrid_name or os.environ.get("PFM_HYBRID_NAME", "fastvit_sa24")      # Update 165: PFM_HYBRID_NAME=fastvit_sa12 = compatible student core
         self.backbone = Backbone(backbone, pretrained, hybrid_name=hybrid_name)
         d = self.backbone.dim
         self.teacher_heads = nn.ModuleDict({k: TeacherHead(d, v) for k, v in (teacher_dims or {}).items()})

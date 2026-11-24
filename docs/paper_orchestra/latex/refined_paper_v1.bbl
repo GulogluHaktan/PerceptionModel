@@ -1,0 +1,87 @@
+\begin{thebibliography}{10}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Chen et~al.(2022{\natexlab{a}})Chen, Ge, Tong, Wang, Song, Wang, and
+  Luo]{Chen2022AdaptformerAdapting}
+Shoufa Chen, Chong-Jian Ge, Zhan Tong, Jiang Wang, Yi-Bing Song, Jue Wang, and
+  Ping Luo.
+\newblock Adaptformer: Adapting vision transformers for scalable visual
+  recognition.
+\newblock \emph{ArXiv}, abs/2205.13535, 2022{\natexlab{a}}.
+
+\bibitem[Chen et~al.(2022{\natexlab{b}})Chen, Duan, Wang, He, Lu, Dai, and
+  Qiao]{Chen2022VisionTransformer}
+Zhe Chen, Yuchen Duan, Wenhai Wang, Jun-Jun He, Tong Lu, Ji-Feng Dai, and Y.
+  Qiao.
+\newblock Vision transformer adapter for dense predictions.
+\newblock \emph{ArXiv}, abs/2205.08534, 2022{\natexlab{b}}.
+
+\bibitem[Foehn et~al.(2020)Foehn, Brescianini, Kaufmann, Cieslewski, Gehrig,
+  Muglikar, and Scaramuzza]{Foehn2020AlphapilotAutonomous}
+Philipp Foehn, Dario Brescianini, Elia Kaufmann, Titus Cieslewski, Mathias
+  Gehrig, Manasi Muglikar, and D. Scaramuzza.
+\newblock Alphapilot: autonomous drone racing.
+\newblock \emph{Autonomous Robots}, 46:\penalty0 307 -- 320, 2020.
+
+\bibitem[Jia et~al.(2022)Jia, Tang, Chen, Cardie, Belongie, Hariharan, and
+  Lim]{Jia2022VisualPrompt}
+Menglin Jia, Luming Tang, Bor-Chun Chen, C. Cardie, S. Belongie, Bharath
+  Hariharan, and Ser-Nam Lim.
+\newblock Visual prompt tuning.
+\newblock \emph{ArXiv}, abs/2203.12119, 2022.
+
+\bibitem[Kirkpatrick et~al.(2016)Kirkpatrick, Pascanu, Rabinowitz, Veness,
+  Desjardins, Rusu, Milan, Quan, Ramalho, Grabska-Barwinska, Hassabis, Clopath,
+  Kumaran, and Hadsell]{Kirkpatrick2016OvercomingCatastrophic}
+J. Kirkpatrick, Razvan Pascanu, N. Rabinowitz, J. Veness, Guillaume Desjardins,
+  A. Rusu, Kieran Milan, John Quan, T. Ramalho, A. Grabska-Barwinska, D.
+  Hassabis, C. Clopath, D. Kumaran, and R. Hadsell.
+\newblock Overcoming catastrophic forgetting in neural networks.
+\newblock \emph{Proceedings of the National Academy of Sciences}, 114:\penalty0
+  3521 -- 3526, 2016.
+
+\bibitem[Lin et~al.(2023)Lin, Jiang, Ye, Zhang, Chen, Chen, Liu, Tsang, and
+  Kwok]{Lin2023DualbalancingMultitask}
+Baijiong Lin, Weisen Jiang, Fei-Yang Ye, Yu Zhang, Peng-Guang Chen, Yingke
+  Chen, Shu Liu, I. Tsang, and J. Kwok.
+\newblock Dual-balancing for multi-task learning.
+\newblock \emph{Neural networks : the official journal of the International
+  Neural Network Society}, 195:\penalty0 108317, 2023.
+
+\bibitem[Song et~al.(2023)Song, Romero, Müller, Koltun, and
+  Scaramuzza]{Song2023ReachingLimit}
+Yun-Long Song, Angel Romero, Matthias Müller, V. Koltun, and D. Scaramuzza.
+\newblock Reaching the limit in autonomous racing: Optimal control versus
+  reinforcement learning.
+\newblock \emph{Science Robotics}, 8, 2023.
+
+\bibitem[Wang et~al.(2023)Wang, Zhang, Su, and
+  Zhu]{Wang2023ComprehensiveSurvey}
+Liyuan Wang, Xingxing Zhang, Hang Su, and Jun Zhu.
+\newblock A comprehensive survey of continual learning: Theory, method and
+  application.
+\newblock \emph{IEEE Transactions on Pattern Analysis and Machine
+  Intelligence}, 46:\penalty0 5362--5383, 2023.
+
+\bibitem[Wortsman et~al.(2021)Wortsman, Ilharco, Kim, Li, Kornblith, Roelofs,
+  Gontijo-Lopes, Hajishirzi, Farhadi, Namkoong, and
+  Schmidt]{Wortsman2021RobustFinetuning}
+M. Wortsman, Gabriel Ilharco, Jong~Wook Kim, Mike Li, S. Kornblith, Rebecca
+  Roelofs, Raphael Gontijo-Lopes, Hannaneh Hajishirzi, Ali Farhadi, Hongseok
+  Namkoong, and Ludwig Schmidt.
+\newblock Robust fine-tuning of zero-shot models.
+\newblock \emph{2022 IEEE/CVF Conference on Computer Vision and Pattern
+  Recognition (CVPR)}, pages 7949--7961, 2021.
+
+\bibitem[Xin et~al.(2022)Xin, Ghorbani, Garg, Firat, and
+  Gilmer]{Xin2022DoCurrent}
+De-Pei Xin, B. Ghorbani, Ankush Garg, O. Firat, and J. Gilmer.
+\newblock Do current multi-task optimization methods in deep learning even
+  help?
+\newblock \emph{ArXiv}, abs/2209.11379, 2022.
+
+\end{thebibliography}

@@ -1,0 +1,84 @@
+{
+ "version": "release_v4 + cpk3 + ng2 + refiner_v2 (min14) + seg modules (SegRefine v1 + SegHead2 v2, mean of logits)",
+ "input_size": 448,
+ "input": "RGB float 0..1, NCHW, squashed (not letterboxed) to 448x448; ImageNet normalisation is inside the graph",
+ "graphs": {
+  "system": "system_448.onnx",
+  "refiner": "refiner.onnx"
+ },
+ "outputs": [
+  "depth",
+  "seg",
+  "gates",
+  "cpk_heat",
+  "cpk_off",
+  "ng_gates",
+  "pooled"
+ ],
+ "gates_format": "candidates (1,M,11+M): score, level, logit, 8 coords, same-gate row -> gdet_post.gdet_select",
+ "checkpoints": {
+  "core": "Projects/PerceptionModel/runs/release_v4/bigY_h_hybrid.pt",
+  "cpk": "DroneRacing_eval/runs_cmp/cpk3.pt",
+  "ng": "DroneRacing_eval/runs_cmp/ng2.pt",
+  "refiner": "Projects/PerceptionModel/runs/refiner_v2/refiner.pt",
+  "seg": "Projects/PerceptionModel/runs/modules/seg_refine/module.pt"
+ },
+ "seg_classes": [
+  "background",
+  "gate",
+  "tree_pole",
+  "person",
+  "ground_road",
+  "building",
+  "opponent_drone",
+  "car",
+  "rock",
+  "lane_marking",
+  "other_obstacle"
+ ],
+ "gdet": {
+  "k": 8,
+  "dedup": 0.25,
+  "main_levels": 2,
+  "ng_levels": 1,
+  "merge": true
+ },
+ "post": {
+  "thr": 0.05,
+  "ng_thr": 0.6,
+  "ng_min": 0.0,
+  "cpk_thr": 0.3,
+  "confirm": true,
+  "confirm_hi": 0.5,
+  "confirm_r": 0.1,
+  "confirm_rmin": 6.0,
+  "confirm_n": 2,
+  "snap": false,
+  "dedup_all": true,
+  "dedup_iou": 0.2,
+  "dedup_inside": false,
+  "min_size_px": 14.0,
+  "refiner_margin": 2.0,
+  "refiner_vis_thr": 0.0
+ },
+ "onnx_check": {
+  "frames": 24,
+  "max_abs_diff": {
+   "depth": 0.0,
+   "seg": 6e-05,
+   "gates": 0.00011,
+   "cpk_heat": 4e-05,
+   "cpk_off": 0.0,
+   "ng_gates": 0.0,
+   "pooled": 0.0,
+   "split_mismatch": 0
+  },
+  "frames_same_gate_set": 24,
+  "refiner_max_abs_diff": 2e-06,
+  "note": "reference = PyTorch model as trained (not re-parameterised); gates diff in px at 448"
+ },
+ "size_mb": {
+  "system_448.onnx": 42.9,
+  "refiner.onnx": 2.4
+ }
+}

@@ -1,0 +1,47 @@
+{
+    "Summary": "The paper extends a frozen ~8M-parameter FastViT-SA24 multi-task edge perception core with small read-only plug-in modules on its stride-8 features. The core has segmentation, inverse-depth, lane and gate-corner heads. The modules are a CornerRefiner (sub-pixel corner refinement), a CornerPeakHead (confirming weak detections) and a NearGateHead (frame-filling gates), followed by two parameter-free steps: global NMS at IoU 0.2 and a 14 px minimum-box-size filter. Because the modules never write into the core, all general-task outputs are preserved exactly. The system replaces the dedicated GateNet detector in a third-party Isaac Lab drone-racing stack (learned policy + EKF). On 128 flights per arm over held-out seeds, it reaches 87.5% success versus 82.0% for GateNet. The difference is not significant (seed-level sign test p\u22480.14), and the authors explicitly claim parity rather than superiority. The paper also documents a development path from 37.5% to 87.5%, with two lessons: offline crop metrics did not predict closed-loop success, and duplicate detections were catastrophic for the EKF. It reports Jetson Orin NX latency and energy for the reparameterized core (26.4 ms at 15 W).",
+    "Strengths": [
+        "Unusually honest and transparent reporting. The non-significance, simulation-only scope, far-gate degradation, unmatched seed subsets in the min-size sweep and missing module latency are all stated explicitly.",
+        "Closed-loop evaluation with separated validation and final test seeds, multiple drones per seed, a seed-level sign test, Wilson intervals and an explicit loop-noise estimate. This is more rigorous than typical offline-only perception evaluation.",
+        "Informative in-loop diagnostics:\n  - corner pixel error binned by gate size shows that precision, not recall, was limiting;\n  - duplicate detections are shown to collapse success to 15.6%;\n  - EKF next-gate error binned by distance localizes where the methods differ.",
+        "Practically relevant edge setting (one multi-task model on Jetson Orin NX), with concrete latency and energy measurements in two power modes. These show the importance of structural reparameterization (44.2\u219226.4 ms).",
+        "Negative results on core retraining are reported, which is useful for practitioners, albeit only qualitatively.",
+        "Clear writing and well-annotated figures that make the development path easy to follow."
+    ],
+    "Weaknesses": [
+        "Limited conceptual novelty. Attaching new heads to stop-gradient frozen features is standard practice (multi-head frozen trunks, probing, Side-Tuning, Ladder Side-Tuning). Exact preservation of the original outputs (Eq. 3) is a trivial identity rather than a technical contribution. The closest prior art (side-tuning-style methods) is not discussed. Framing the work against adapters, VPT and WiSE-FT is partly a straw man, since those methods deliberately adapt the shared representation.",
+        "The plug-in modules are essentially undescribed. Architectures, parameter counts, FLOPs, training data (simulator vs. real), labels, losses and schedules are missing, and the 'Step B synthesised peaks' are vague. This makes the work irreproducible and leaves unclear whether the modules are themselves application-trained on simulator data, which would weaken the contrast with the 'dedicated' GateNet.",
+        "The central motivation, avoiding a second network in the onboard budget, is not validated:\n  - module and post-processing latency, memory and size on the Orin are not measured;\n  - neither is GateNet's cost;\n  - the core alone already consumes 26.4 of the 33.3 ms frame budget;\n  - the NearGateHead is itself a dedicated detector.",
+        "The main closed-loop claim is statistically weak (12/5/15 seed W/L/T, p\u22480.14, overlapping intervals). It rests on one simulated application and one baseline, so even the parity claim has limited generality.",
+        "Missing controls and ablations:\n  - no GateNet with the same global NMS and min-size filter, which is essential to attribute gains to the frozen-core modules rather than post-processing;\n  - no leave-one-module-out ablation of the final configuration; the CornerRefiner showed no measurable gain alone yet is retained;\n  - no adapter/LoRA or fine-tuned-copy baselines with reported general-metric deltas;\n  - no compute comparison against running a separate specialized network.",
+        "The negative results on core modification (sim fine-tuning, corner loss weights 10/40/100, stride-2 head, model soups) are stated without closed-loop or general-metric numbers. The claim that modifying the core hurts other tasks without helping the target is therefore asserted rather than shown.",
+        "Seed protocol concerns. 'Clean' development seeds were evaluated after each step and plausibly informed subsequent design choices, so only seeds 141\u2013176 are truly held out. Step-wise results with 32\u201364 flights lie within the stated \u00b110\u201315 point loop noise.",
+        "The real-gate offline comparison (0.987 vs 0.776 within 20 px) evaluates the core alone, not the full system with modules. It also pits a model trained on real gates against a simulator-only detector, so it neither supports real-world robustness of the modules nor constitutes a fair generalization comparison.",
+        "The 'offline metrics mislead' lesson rests mainly on a well-known EKF data-association failure (duplicate landmarks). It is not supported by a systematic offline-online correlation analysis.",
+        "Minor issues:\n  - the core input is described as 448 px, while timings and deployment use 384\u00d7384;\n  - a note on TensorRT/fp16 determinism is needed for the bit-identity claim;\n  - some references are inaccurate;\n  - the far-gate (8+ m) regression is partly caused by the min-size filter."
+    ],
+    "Originality": 2,
+    "Quality": 2,
+    "Clarity": 3,
+    "Significance": 2,
+    "Questions": [
+        "What are the architectures, parameter counts, FLOPs, input features, training data (simulator, real or both), labels and losses of CornerRefiner, CornerPeakHead and NearGateHead?",
+        "What is the end-to-end latency and energy (core + modules + NMS + filter) on the Jetson Orin NX at 15 W? Does it fit the 33.3 ms budget? How does it compare with GateNet's cost and with running core + GateNet side by side?",
+        "How does GateNet perform in closed loop with the same global NMS (IoU 0.2) and 14 px minimum-size filter?",
+        "Can you provide a leave-one-module-out ablation of the final configuration on the final (or matched validation) seeds?",
+        "Can you report closed-loop success and general-metric changes for each core-modification attempt (loss weights, stride-2 head, soups, sim fine-tuning)?",
+        "How does the approach differ from side-tuning / ladder side-tuning or simply training extra heads on frozen features?",
+        "How does the full system with modules perform on the real-gate set and TII video? Was GateNet trained only on simulator data, and would training it on the same real data close the gap?",
+        "Which development seeds informed design decisions, and which seeds were never examined before the final configuration was frozen?",
+        "What causes the far-gate regression? Does a distance-aware min-size filter recover it?",
+        "Is the core's input resolution 448 or 384, and which resolution do the Table 3 metrics correspond to?"
+    ],
+    "Limitations": "The authors acknowledge the key limitations: simulation-only closed-loop results, one application and one baseline, a non-significant advantage, worse far-gate estimator error, unmeasured module latency, and the unmatched min-size sweep. Further limitations:\n  - the frozen-core design caps achievable precision at what the frozen features encode;\n  - total compute and memory grow with each added module;\n  - there is no comparison against a separate specialized network;\n  - module details are insufficient for reproduction;\n  - modules trained on simulator data raise sim-to-real concerns;\n  - the 'offline metrics mislead' lesson is untested beyond EKF duplicate sensitivity.\nSocietal impact is minimal, though autonomous high-speed drone perception has dual-use potential that could be briefly noted.",
+    "Ethical Concerns": false,
+    "Soundness": 2,
+    "Presentation": 3,
+    "Contribution": 2,
+    "Overall": 3,
+    "Confidence": 4,
+    "Decision": "Reject"
+}

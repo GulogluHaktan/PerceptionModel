@@ -1,0 +1,75 @@
+{
+    "v1": {
+        "round": 1,
+        "agent_plan": {
+            "addressed_weaknesses": [
+                "Limited novelty / straw-man framing (W1): The Introduction and Related Work now say plainly that attaching heads to frozen, stop-gradient features is standard practice (probing, multi-head frozen trunks, side networks that run next to a frozen backbone). Adapters, VPT and WiSE-FT are now described as methods that deliberately adapt the shared representation, so they are a different goal rather than a weaker version of ours. Eq. 3 is now called a simple identity. Its value is operational: the core needs no re-validation. The contribution is reframed as an empirical systems question: is read-only extension enough for a precision-critical closed-loop task?",
+                "Module description (W2): Added a 'Module interface and training' paragraph. It gives each module's inputs, outputs, operating thresholds and role, and states that all modules are trained for the application with stop-gradient (Eq. 2). It also says directly that NearGateHead is a dedicated detection head that shares the backbone pass. The contrast with GateNet is therefore about sharing one backbone, not general versus dedicated. Step B is described more precisely as a parameter-free, output-side operation. No architecture sizes, FLOPs or training data were invented, because none are in the experimental log.",
+                "Onboard-budget motivation (W3): The Edge section now separates what was measured (the core only) from the structural argument (modules add head-level compute on F, not a second backbone pass). It reports the measured headroom against the 33.3 ms frame period: 6.9 ms at 15 W and 18.7 ms at MAXN. The motivation in the Introduction is softened from 'second network' to 'second backbone forward pass'.",
+                "Statistical weakness and generality (W4): The parity framing is kept. We added that step-wise differences in the development path lie within loop noise and should be read as qualitative.",
+                "Missing controls (W5): The ablation section now explains why duplicate suppression mostly targets duplicates created by merging three detection sources (GateNet's offline duplicate rate is already 0.018 per frame), and that min14 is a generic step. It states that the development path is cumulative, not leave-one-out, and why the CornerRefiner was kept. No new experiments were added.",
+                "Negative results asserted, not shown (W6): The text is narrowed to what the log supports: no closed-loop gain within noise, and general-metric cost that grows with corner loss weight. These results are labelled qualitative.",
+                "Seed protocol (W7): Seeds now have three explicit roles: validation, development-check seeds (each evaluated once, and they guided later choices), and final-test seeds (141-176, never looked at before the configuration was frozen). Wording in the Introduction, Setup, tables, figure captions and Appendix A is updated to match.",
+                "Real-gate comparison (W8): It is now described as measuring the core's gate head (the input to the modules). It reflects how broad the training data is, not a matched comparison with GateNet. The contribution bullet that relied on it was removed.",
+                "Offline-metrics lesson (W9): Narrowed to the documented mechanism (duplicate landmarks in the EKF) and stated as an observation from this study, not a general correlation result.",
+                "Minor issues (W10): Clarified 448 px (training resolution and general metrics) versus 384x384 (camera crop, closed loop and Orin timing). Added a note on TensorRT fp16 and what the bit-identity claim covers. Explained how the min14 filter contributes to the far-gate regression. Added a short dual-use note."
+            ],
+            "integrated_answers": [
+                "Q1 (module details): Added the interface, inputs, outputs, thresholds and training objective of each module in Sec. 3.3, using only information that exists.",
+                "Q2 (end-to-end latency): Sec. 4.5 now states that only the core was timed, and gives the remaining headroom against the frame budget (6.9 ms at 15 W, 18.7 ms at MAXN) plus the structural cost argument.",
+                "Q3 (GateNet with the same NMS and filter): No such run is in the log. Instead, Sec. 4.4 explains from GateNet's low offline duplicate rate (0.018 per frame) why duplicate suppression mainly fixes a problem specific to our merged pipeline.",
+                "Q4 (leave-one-module-out): Not available. The text now says the path is cumulative and gives the reason for keeping the CornerRefiner.",
+                "Q5 (numbers for core-modification attempts): Not in the log. The claims are narrowed to qualitative statements.",
+                "Q6 (difference from side-tuning and extra heads): New Related Work paragraph 'Heads on frozen features' and a repositioned Introduction.",
+                "Q7 (real-gate data and GateNet training): Clarified that the real-gate numbers come from the core's gate head and that GateNet was trained only on simulator data. No new experiments.",
+                "Q8 (which seeds informed decisions): Three-tier seed protocol in Sec. 4.1 and Appendix A.",
+                "Q9 (far-gate regression): Mechanism explained (min14 removes small, distant gates; coarse core corners). A size- or distance-aware filter is listed as a refinement.",
+                "Q10 (448 vs 384): Clarified in Sec. 3.2."
+            ],
+            "actions_taken": [
+                "Rewrote Introduction paragraphs 3-4 and the contribution list",
+                "Added Related Work paragraph 'Heads on frozen features'; reworded the adapter/WiSE-FT contrast; shortened the drone-racing paragraph",
+                "Added a resolution and TensorRT note to Sec. 3.2; added 'Module interface and training' to Sec. 3.3; reworded the Eq. 3 discussion",
+                "Rewrote the seed paragraph in Sec. 4.1; relabelled seed types in Table 4 and the Fig. 5 caption",
+                "Added a noise caveat for the development path, a post-processing attribution paragraph and a note on CornerRefiner retention in Sec. 4.4",
+                "Added the latency headroom analysis to Sec. 4.5",
+                "Rewrote the far-gate explanation, the real-gate comparison paragraph and the lessons list",
+                "Updated Conclusion (dual-use note, size-aware filter in future work) and Appendix A seed protocol"
+            ]
+        },
+        "scores_before": {
+            "Originality": 2.0,
+            "Quality": 2.0,
+            "Clarity": 3.0,
+            "Significance": 2.0,
+            "Soundness": 2.0,
+            "Presentation": 3.0,
+            "Contribution": 2.0,
+            "Overall": 3.0,
+            "Confidence": 4.0
+        },
+        "scores_after": {
+            "Originality": 2.0,
+            "Quality": 2.0,
+            "Clarity": 3.0,
+            "Significance": 2.0,
+            "Soundness": 2.0,
+            "Presentation": 3.0,
+            "Contribution": 2.0,
+            "Overall": 3.0,
+            "Confidence": 4.0
+        },
+        "deltas": {
+            "Originality": 0.0,
+            "Quality": 0.0,
+            "Clarity": 0.0,
+            "Significance": 0.0,
+            "Soundness": 0.0,
+            "Presentation": 0.0,
+            "Contribution": 0.0
+        },
+        "total_gain": 0.0,
+        "total_drop": 0.0,
+        "outcome": "ACCEPTED_NEUTRAL_IMPROVEMENT"
+    }
+}
