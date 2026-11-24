@@ -26,15 +26,41 @@ VIDIOC_STREAMON, VIDIOC_STREAMOFF = _IOC(1, 18, 4), _IOC(1, 19, 4)
 VIDIOC_S_EXT_CTRLS = _IOC(3, 72, 32)
 
 
+PIX_CLK, LINE_LEN = 182_400_000, 3448            # IMX219 timing of all our modes: one line = 18.9 us
+I2C_SLAVE_FORCE = 0x0706
+
+
+class SensorI2C:
+    """Direct register access to the IMX219 (Update 167): with raw V4L2 streaming NVIDIA's control layer does NOT forward exposure / gain /
+    frame-rate controls to the sensor (the registers never change; checked with i2ctransfer), so we write them ourselves. The bus is the one the
+    nv_imx219 driver is bound on (/sys/bus/i2c/drivers/imx219/<bus>-0010); the user needs the i2c group."""
+    def __init__(self, bus=None, addr=0x10):
+        if bus is None:
+            devs = [d for d in os.listdir("/sys/bus/i2c/drivers/imx219") if d.endswith("-0010")] if os.path.isdir("/sys/bus/i2c/drivers/imx219") else []
+            bus = int(devs[0].split("-")[0]) if devs else 9
+        self.fd = os.open(f"/dev/i2c-{bus}", os.O_RDWR); fcntl.ioctl(self.fd, I2C_SLAVE_FORCE, addr); self.bus = bus
+    def write(self, reg, *vals): os.write(self.fd, bytes([reg >> 8, reg & 0xFF, *vals]))
+    def read(self, reg, n=1): os.write(self.fd, bytes([reg >> 8, reg & 0xFF])); return os.read(self.fd, n)
+    def set(self, exposure_us=None, gain_x=None, frame_lines=None):
+        """frame_lines first (exposure must stay <= frame_lines - 4), then exposure (lines of 18.9 us), then analog gain 1..10.67x."""
+        if frame_lines: self.write(0x0160, (frame_lines >> 8) & 0xFF, frame_lines & 0xFF)
+        if exposure_us:
+            fl = int.from_bytes(self.read(0x0160, 2), "big"); lines = max(1, min(fl - 4, int(round(exposure_us * 1e-6 * PIX_CLK / LINE_LEN))))
+            self.write(0x015A, (lines >> 8) & 0xFF, lines & 0xFF)
+        if gain_x: self.write(0x0157, max(0, min(232, int(round(256 - 256 / max(1.0, gain_x))))))
+
+
 class RawCamera:
     def __init__(self, dev="/dev/video0", mode=7, fps=None, nbuf=4, exposure_us=None, gain=None, dump=None):
-        self.w, self.h, f = MODES[mode]; self.fps = fps or f; self.dev = dev
+        self.w, self.h, f = MODES[mode]; self.fps = fps or f; self.dev = dev; self.default_fps = f
         # format + mode with v4l2-ctl (the frame-rate control must be set AFTER the mode switch, in its own call: its range follows the mode)
         subprocess.run(["v4l2-ctl", "-d", dev, f"--set-fmt-video=width={self.w},height={self.h},pixelformat=RG10", "--set-ctrl", "bypass_mode=0",
                         "--set-ctrl", f"sensor_mode={mode}"], check=True, capture_output=True)
         subprocess.run(["v4l2-ctl", "-d", dev, "--set-ctrl", f"frame_rate={int(self.fps * 1e6)}"], check=True, capture_output=True)
         self.fd = os.open(dev, os.O_RDWR | os.O_NONBLOCK)
-        if exposure_us or gain: self.set_exposure(exposure_us, gain)
+        try: self.i2c = SensorI2C()
+        except OSError as e: self.i2c = None; print(f"v4l2raw: no direct sensor access ({e}); exposure / gain stay at the mode defaults", flush=True)
+        self.pending = (exposure_us, gain, fps if fps and fps != f else None)      # applied at the first frame (the mode table is written at stream on)
         rb = bytearray(struct.pack("IIIIB3x", nbuf, V4L2_BUF_TYPE_VIDEO_CAPTURE, V4L2_MEMORY_MMAP, 0, 0)); fcntl.ioctl(self.fd, VIDIOC_REQBUFS, rb)
         n = struct.unpack("I", rb[:4])[0]; self.bufs = []
         for i in range(n):
@@ -44,6 +70,7 @@ class RawCamera:
             fcntl.ioctl(self.fd, VIDIOC_QBUF, b)
         self.stride = None
         fcntl.ioctl(self.fd, VIDIOC_STREAMON, struct.pack("i", V4L2_BUF_TYPE_VIDEO_CAPTURE))
+        self.exp_gain = (exposure_us or 0, gain or 0)
         self.lock = threading.Lock(); self.cond = threading.Condition(self.lock); self.frame = None; self.fid = 0; self.t = 0.0; self.seq = 0
         self.stop_ = False; self.dropped = 0; self.held = None
         self.dump = None; self.ndump = 0; self.exp_gain = (exposure_us or 0, gain or 0)
@@ -56,17 +83,14 @@ class RawCamera:
         self.clk_off = None      # camera clock -> time.time(): min over frames of (arrival - stamp) = the readout-to-arrival floor (~1-2 ms)
         self.th = threading.Thread(target=self._run, daemon=True); self.th.start()
 
-    def set_exposure(self, exposure_us=None, gain=None):
-        """Sensor exposure (us) and analog gain (16 = 1x ... 170 = 10.6x) through VIDIOC_S_EXT_CTRLS (int64 controls)."""
+    def set_exposure(self, exposure_us=None, gain=None, fps=None):
+        """Sensor exposure (us), analog gain (16 = 1x ... 170 = 10.6x, V4L2 units) and optionally the frame rate (lower fps = longer frames =
+        longer possible exposure), written straight to the sensor over I2C."""
         self.exp_gain = (exposure_us or self.exp_gain[0], gain or self.exp_gain[1]) if hasattr(self, "exp_gain") else (exposure_us, gain)
-        items = [(CID["exposure"], int(exposure_us))] if exposure_us else []
-        if gain: items.append((CID["gain"], int(gain)))
-        if not items: return
-        import ctypes
-        arr = b"".join(struct.pack("<IIIq", cid, 0, 0, v) for cid, v in items)                 # packed struct v4l2_ext_control (20 bytes each)
-        buf = ctypes.create_string_buffer(arr, len(arr))
-        ctrls = bytearray(struct.pack("IIIiI4xQ", 0, len(items), 0, 0, 0, ctypes.addressof(buf)))   # struct v4l2_ext_controls (32 bytes)
-        fcntl.ioctl(self.fd, VIDIOC_S_EXT_CTRLS, ctrls)
+        if self.i2c is None: return
+        fl = int(round(PIX_CLK / LINE_LEN / fps)) if fps else None
+        if fl: fl = max(fl, self.h + 4)
+        self.i2c.set(exposure_us, (gain / 16.0) if gain else None, fl)
 
     def _run(self):
         import select
@@ -82,6 +106,8 @@ class RawCamera:
             fcntl.ioctl(self.fd, VIDIOC_QBUF, b)                 # give the buffer back at once (we keep our own copy: 2 MB, ~0.3 ms)
             if self.dump is not None:
                 self.dump[0].write(img.tobytes()); self.dump[1].write(f"{self.ndump} {sec + usec * 1e-6 + (self.clk_off or 0):.6f} {seq} {self.exp_gain[0]:.0f} {self.exp_gain[1]:.0f}\n"); self.ndump += 1
+            if self.pending is not None and self.i2c is not None:          # first frame: the mode table is in -> our exposure / gain / fps
+                e, g_, f_ = self.pending; self.pending = None; self.set_exposure(e, g_, f_)
             ts = sec + usec * 1e-6; off = time.time() - ts
             self.clk_off = off if self.clk_off is None else min(self.clk_off, off)
             with self.cond:

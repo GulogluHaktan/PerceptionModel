@@ -54,6 +54,8 @@ class M2FIndoor(nn.Module):
         else:
             self.m = Mask2FormerForUniversalSegmentation.from_pretrained(MODEL).eval()
             lut = torch.tensor(coco_lut(self.m.config.id2label)); A = torch.zeros(K_IN, len(lut)); A[lut, torch.arange(len(lut))] = 1.0      # 22 x 133
+        if os.environ.get("CLASS_W"):        # per-class score weights (scripts/calib_class_weights.py): scale class c's row of A = scale its score
+            A = A * torch.tensor(json.loads(Path(os.environ["CLASS_W"]).read_text())["weights"]).view(-1, 1)
         self.register_buffer("A", A)
         self.register_buffer("mean", torch.tensor([0.485, 0.456, 0.406]).view(1, 3, 1, 1)); self.register_buffer("std", torch.tensor([0.229, 0.224, 0.225]).view(1, 3, 1, 1))
     def forward(self, image):

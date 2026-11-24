@@ -15,13 +15,16 @@ ap.add_argument("--square", action="store_true", help="centre-crop the frame to 
 ap.add_argument("--calib", default="", help="camera.json from calibrate_camera.py: undistort every frame (needed for wide / fisheye lenses)")
 ap.add_argument("--hfov", type=float, default=120.0, help="horizontal field of view of the undistorted view (with --calib)")
 ap.add_argument("--raw-dump", default="", help="raw camera: also write EVERY raw frame to this folder (frames.raw + stamps.txt + meta.json; raw_record.py conv turns it into images)")
-ap.add_argument("--exp-max", type=float, default=2000, help="raw camera: longest exposure in us (motion blur at speed); then analog gain rises")
+ap.add_argument("--scene", default="", help="indoor|outdoor: fixed scene (only that module is loaded); empty = auto router")
+ap.add_argument("--cam-fps", type=float, default=0, help="raw camera: sensor frame rate below the mode default (e.g. 72) = longer frames, longer possible exposure")
+ap.add_argument("--exp-max", type=float, default=8000, help="raw camera: longest exposure in us (motion blur at speed); then analog gain rises")
 ap.add_argument("--fps", type=float, default=30); ap.add_argument("--frames", type=int, default=0, help="stop after N frames (0 = run forever)")
 ap.add_argument("--gpu-wait", type=float, default=900, help="seconds to wait for CUDA at boot")
 ap.add_argument("--rotate", type=int, default=0, choices=[0, 90, 180, 270], help="rotate frames clockwise before the model (phone held upright sends sideways frames: try 90 or 270)")
 ap.add_argument("--no-pipeline", action="store_true", help="run each frame start to finish (default with TensorRT + GPU pre-processing: GPU works on frame n+1 while the host post-processes frame n)")
 ap.add_argument("--cpu-prep", action="store_true", help="old path: BGR->RGB, undistort and square crop on the CPU (default: on the GPU, ~10-20 ms less CPU per frame on the Orin)")
 a = ap.parse_args()
+if a.scene: os.environ["PFM_SCENE"] = a.scene
 
 import torch
 t0 = time.time()
@@ -35,7 +38,7 @@ gpu_prep = not a.cpu_prep and gp.dev != "cpu"
 RAW = a.source.startswith("raw")                 # raw:<sensor_mode>  custom wide modes through V4L2 (deploy/v4l2raw.py), GPU ISP in pfm_runtime._prep_raw
 if RAW:
     from v4l2raw import RawCamera
-    cam = RawCamera(mode=int(a.source.partition(":")[2] or 7), exposure_us=min(2000, a.exp_max), gain=32, dump=a.raw_dump or None); exp_us, gain = min(2000, a.exp_max), 32.0
+    cam = RawCamera(mode=int(a.source.partition(":")[2] or 7), fps=a.cam_fps or None, exposure_us=min(4000, a.exp_max), gain=32, dump=a.raw_dump or None); exp_us, gain = min(4000, a.exp_max), 32.0
     if und is not None: gp.raw_grid = und.gpu(gp.dev).grid; und = None
     gp.raw_rotate = a.rotate
 else: cam = Camera(a.source, fps=a.fps, rgb=not gpu_prep)
@@ -54,7 +57,7 @@ pipe = gpu_prep and a.backend == "trt" and not a.no_pipeline
 host, port = a.udp.rsplit(":", 1); sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); dst = (host, int(port))
 rec = Path(a.record) if a.record else None
 if rec: rec.mkdir(parents=True, exist_ok=True); log = open(rec / "detections.jsonl", "a")
-last, n, tl, stats = 0, 0, time.time(), []; t_start, all_lat = time.time(), []
+last, n, tl, stats = 0, 0, time.time(), []; t_start, all_lat = time.time(), []; ms_acc = {}
 print(f"running: source={a.source} backend={a.backend} pipeline={'on' if pipe else 'off'} -> udp {a.udp}", flush=True)
 try:
     while True:
@@ -83,6 +86,7 @@ try:
         g = r["gates"].cpu().numpy(); p = r["peaks"].cpu().numpy()
         if x0 or y0: g[:, 1::2] += x0; g[:, 2::2] += y0; p[:, 2] += x0; p[:, 3] += y0     # back to full-frame px
         msg = dict(id=last, t_cap=tcap, t_out=time.time(), w=W, h=H, gates=np.round(g, 2).tolist(), peaks=np.round(p, 2).tolist(), ms={k: round(v, 2) for k, v in r["ms"].items()})
+        for k_, v_ in r["ms"].items(): ms_acc.setdefault(k_, []).append(v_)
         sock.sendto(json.dumps(msg).encode(), dst); n += 1; stats.append(msg["t_out"] - tcap); all_lat.append(msg["t_out"] - tcap)
         if rec and n % a.record_every == 0:          # the image the model saw (after undistort / crop), RGB
             from PIL import Image
@@ -99,5 +103,6 @@ try:
         if a.frames and n >= a.frames: break
 finally:
     cam.close()
+    if n: print("stage ms (median): " + ", ".join(f"{k_} {np.median(v_):.2f}" for k_, v_ in ms_acc.items()), flush=True)
     if n: L = np.array(all_lat) * 1e3; print(f"done: {n} frames in {time.time() - t_start:.1f} s ({n / (time.time() - t_start):.1f} FPS) | capture->output median {np.median(L):.1f} ms p95 {np.percentile(L, 95):.1f} ms", flush=True)
     sys.stdout.flush(); os._exit(0)          # a network stream reader can block in cap.read() forever: do not wait for it at exit

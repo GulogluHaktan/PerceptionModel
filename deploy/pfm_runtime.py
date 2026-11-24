@@ -90,8 +90,14 @@ class TrtBackend:
         self.heads = {}; cfg = json.loads((bundle / "bundle.json").read_text()); self.last_head = [None, None]
         self.async_names = set(x for x in os.environ.get("PFM_ASYNC_HEADS", "m2f,m2f_out").split(",") if x); self.ahead = {}; self.abusy = None
         self.aev = torch.cuda.Event(); self.acp = [torch.cuda.Event(), torch.cuda.Event()]; self.acp_used = [False, False]
-        self.every = cfg.get("head_every") or {}; self.nlaunch = 0; self.ran = [False, False]; self.seg_in_cache = None; self.seg_fine_cache = None     # heavy heads run every N-th frame (m2f)
+        self.every = dict(cfg.get("head_every") or {})
+        for kv in filter(None, os.environ.get("PFM_HEAD_EVERY", "").split(",")): k_, v_ = kv.split("="); self.every[k_] = int(v_)     # e.g. m2f=20,m2f_out=20
+        self.every = self.every; self.nlaunch = 0; self.ran = [False, False]; self.seg_in_cache = None; self.seg_fine_cache = None     # heavy heads run every N-th frame (m2f)
+        fixed = os.environ.get("PFM_SCENE", "auto")          # scene chosen by the operator: do not even load the other scene's module engine
+        skip = {"indoor": {"m2f_out"}, "outdoor": {"m2f"}}.get(fixed, set()) | set(filter(None, os.environ.get("PFM_SKIP_HEADS", "").split(",")))
         for hname, fname in (cfg.get("heads") or {}).items():
+            if hname in skip: continue
+            fname = os.environ.get(f"PFM_{hname.upper()}_PLAN", fname)          # e.g. PFM_M2F_PLAN=m2f_indoor_288x768_ft_plugin.plan
             he = load(fname.replace(".onnx", ".plan")); per_slot = []
             if hname in self.async_names:          # one context with PRIVATE input buffers (the slot buffers are overwritten while it still runs)
                 hc = he.create_execution_context(); ins, outs = {}, {}
@@ -136,7 +142,7 @@ class TrtBackend:
     def _bind(self, slot):
         for n, b in self.sbs[slot].items(): self.sc.set_tensor_address(n, b.data_ptr())
 
-    def launch(self, x, slot=0, head=None):
+    def launch(self, x, slot=0, head=None, full=None):
         """Enqueue the system engine for x into buffer slot `slot` on self.stream (no host wait). The engine stream first waits for the default stream:
         x (resize) is produced there, and earlier reads of this slot's outputs (post-processing of an older frame) must be finished before it is overwritten."""
         self.stream.wait_stream(torch.cuda.current_stream())
@@ -154,7 +160,8 @@ class TrtBackend:
                     with torch.cuda.stream(self.hstream):
                         for n, t in ins.items():
                             src = self.sbs[slot][n]
-                            t.copy_(src if src.shape == t.shape else F.interpolate(src.float(), size=t.shape[-2:], mode="bilinear", align_corners=False))   # 384 system, 448 m2f
+                            if n == "image" and full is not None: src = full       # Update 167: the module sees the FULL frame at its own aspect (e.g. 384x1024), not the squashed system input
+                            t.copy_(src if src.shape == t.shape else F.interpolate(src.float(), size=t.shape[-2:], mode="bilinear", align_corners=False))
                         self.acp[slot].record(self.hstream); self.acp_used[slot] = True
                         if g is not None: g.replay()
                         else: hc.execute_async_v3(self.hstream.cuda_stream)
@@ -196,8 +203,8 @@ class TrtBackend:
         o["head"] = h
         return o
 
-    def system(self, x, head=None):
-        self.launch(x, 0, head); return self.outputs(0, host_wait=True)
+    def system(self, x, head=None, full=None):
+        self.launch(x, 0, head, full); return self.outputs(0, host_wait=True)
 
     def refiner(self, p):
         outs_off, outs_vis = [], []
@@ -350,9 +357,28 @@ class GatePerception:
         if self.scene == "indoor": return "m2f" if "m2f" in self.be.heads else "indoor"
         return "m2f_out" if "m2f_out" in self.be.heads else "seg2"
 
+    # Update 167: the 11-class map from the indoor / outdoor module (much better labels than the frozen core's seg head), core kept for "gate"
+    # (and lane marking) pixels. PFM_SEG_FROM_MODULE=0 = core seg only. Cityscapes 19 -> 11 and indoor 22 -> 11 class lookup tables:
+    LUT_OUT = [4, 4, 5, 5, 10, 2, 2, 2, 2, 4, 0, 3, 3, 7, 7, 7, 7, 7, 10]
+    LUT_IN = [10, 5, 4, 5, 5, 5, 3, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 2, 10, 10]
+
+    def _seg11(self, o):
+        core = o["seg"][0].argmax(0).to(torch.uint8)
+        if os.environ.get("PFM_SEG_FROM_MODULE", "1") != "1": return core
+        for key, lut in (("seg_fine", self.LUT_OUT), ("seg_in", self.LUT_IN)):
+            if key in o and o[key] is not None:
+                if getattr(self, "_lut_t", None) is None: self._lut_t = {}
+                t = self._lut_t.get(key)
+                if t is None: t = self._lut_t[key] = torch.tensor(lut, dtype=torch.uint8, device=core.device)
+                mm = o[key][0].long().clamp_(0, len(lut) - 1)
+                mm = F.interpolate(t[mm][None, None].float(), size=core.shape, mode="nearest")[0, 0].to(torch.uint8)
+                keep = (core == 1) | (core == 9)                      # gate / lane marking stay from the core
+                return torch.where(keep, core, mm)
+        return core
+
     def _route(self, o):
         """Update the scene from this frame's pooled feature (used for the NEXT frame's head: no wait on the current GPU work)."""
-        if self.router_w is None: return
+        if self.router_w is None or not self.scene_auto: return          # fixed scene: no per-frame GPU->CPU copy of the pooled feature
         mu, sd, w, b = self.router_w; z = (o["pooled"].reshape(-1).float().cpu().numpy() - mu) / sd; self.p_indoor = float(1 / (1 + np.exp(-(z @ w + b))))
         if not self.scene_auto: return
         want = "indoor" if self.p_indoor > 0.5 else "outdoor"
@@ -418,6 +444,23 @@ class GatePerception:
         digital gain to an 18 % grey level, sRGB-like gamma, then the optional undistort grid (self.raw_grid) and rotation.
         self.raw_stats keeps the linear grey level for the sensor auto exposure (run.py)."""
         H, W = frame.shape
+        if getattr(self, "_cuda_isp", None) is None and os.environ.get("PFM_ISP", "cuda") == "cuda":      # 3.4 ms on the Orin vs 25 ms (deploy/isp_cuda.py)
+            try:
+                os.environ.setdefault("CUDA_HOME", "/usr/local/cuda"); os.environ["PATH"] = f"{Path(sys.executable).parent}:/usr/local/cuda/bin:" + os.environ.get("PATH", "")
+                import isp_cuda; self._cuda_isp = isp_cuda.CudaISP(self.dev)
+            except Exception as e:                                                       # noqa: BLE001
+                print(f"[pfm_runtime] CUDA ISP unavailable ({e}); using the PyTorch ISP", flush=True); self._cuda_isp = False
+        if self._cuda_isp if getattr(self, "_cuda_isp", None) is not None else False:
+            isp = self._cuda_isp; isp.row_shift = getattr(self, "raw_row_shift", None); rgb = isp(frame); self.raw_stats = isp.lin
+            gr = getattr(self, "raw_grid", None)
+            if gr is not None: rgb = F.grid_sample(rgb, gr, mode="bilinear", padding_mode="zeros", align_corners=False)
+            rot = getattr(self, "raw_rotate", 0)
+            if rot: rgb = torch.rot90(rgb, k=-rot // 90, dims=(2, 3))
+            oh, ow = rgb.shape[-2:]; self.full_hw = (oh, ow)
+            bb = self.img_bufs[slot]
+            if bb is None or tuple(bb.shape[-2:]) != (oh, ow): bb = self.img_bufs[slot] = torch.empty(1, 3, oh, ow, device=self.dev); self._g = {k_: v for k_, v in self._g.items() if k_[-1] != slot}
+            bb.copy_(rgb); self.last_img = bb
+            return bb
         u = torch.from_numpy(frame.view(np.int16)).to(self.dev, non_blocking=True).to(torch.int32).bitwise_and_(0xFFFF)
         if getattr(self, "_rawc", None) is None or self._rawc[0] != (H, W):
             d = self.dev; m = torch.zeros(4, H, W, device=d)
@@ -434,7 +477,9 @@ class GatePerception:
         sh = getattr(self, "raw_row_shift", 8 if W == 1640 else 0)
         if sh:   # IMX219 x2-binned full-width readout (x start 0): odd (G/B) rows come out 8 px LEFT of the even (R/G) rows -> double edges and
                  # colour fringes (measured on the factory 1640x1232 mode too: plane shift +3.79 -> -0.21 after this, = the aligned 1280x720 mode)
-            x = x.clone(); x[1::2, sh:] = x[1::2, :-sh].clone(); x[1::2, :sh] = x[1::2, sh:sh + 1]
+            if sh:   # row y comes out sh*(y%4) px LEFT (x2-binned full-width readout, factory mode too): shift classes 1,2,3 by sh, 2sh, 3sh
+                x = x.clone()
+                for c_ in (1, 2, 3): d_ = sh * c_; x[c_::4, d_:] = x[c_::4, :-d_].clone(); x[c_::4, :d_] = x[c_::4, d_:d_ + 1]
         c = F.conv2d(F.pad(x[None, None], (2, 2, 2, 2), mode="reflect"), k)[0]                          # (4,H,W): G@RB, row-neighbour, col-neighbour, cross
         R_, Gr, Gb, B_ = m[0], m[1], m[2], m[3]
         r = x * R_ + c[1] * Gr + c[2] * Gb + c[3] * B_
@@ -449,6 +494,12 @@ class GatePerception:
         rgb = torch.einsum("ij,bjhw->bihw", ccm, rgb)                                                  # colour correction
         yy = rgb.mean(1, keepdim=True); rgb = yy + F.avg_pool2d(rgb - yy, 5, 1, 2, count_include_pad=False)   # chroma denoise, luma untouched
         rgb = rgb.clamp_(0, 1).pow_(1 / 2.2)
+        # comb / row-alternation of the x2-binned readout: vertical [1,2,1]/4 (measured: comb 38 -> 15, noise 47 -> 26, sharpness 32 -> 20),
+        # then a light edge-preserving luma denoise (guided filter on luma, r 1, eps 5e-4)
+        rgb = torch.cat((rgb[:, :, :1], 0.25 * rgb[:, :, :-2] + 0.5 * rgb[:, :, 1:-1] + 0.25 * rgb[:, :, 2:], rgb[:, :, -1:]), 2)
+        Y = rgb.mean(1, keepdim=True); mY = F.avg_pool2d(Y, 3, 1, 1, count_include_pad=False); vY = F.avg_pool2d(Y * Y, 3, 1, 1, count_include_pad=False) - mY * mY
+        A = vY / (vY + 5e-4); Bc = mY - A * mY; Yn = F.avg_pool2d(A, 3, 1, 1, count_include_pad=False) * Y + F.avg_pool2d(Bc, 3, 1, 1, count_include_pad=False)
+        rgb = (rgb + (Yn - Y)).clamp_(0, 1)
         gr = getattr(self, "raw_grid", None)
         if gr is not None: rgb = F.grid_sample(rgb, gr, mode="bilinear", padding_mode="zeros", align_corners=False)
         rot = getattr(self, "raw_rotate", 0)
@@ -483,7 +534,8 @@ class GatePerception:
         Returns (result, meta) of the PREVIOUS frame (None for the first call). Same results as __call__ frame by frame (tested); one frame more
         latency, throughput = max(GPU time, host time) instead of their sum."""
         t0 = time.perf_counter(); slot = self._slot; self._slot ^= 1
-        img = self._prep(frame, slot); x = F.interpolate(img, size=(self.S, self.S), mode="bilinear", align_corners=False); self.be.launch(x, slot, self._head())
+        img = self._prep(frame, slot); x = F.interpolate(img, size=(self.S, self.S), mode="bilinear", align_corners=False)
+        self.be.launch(x, slot, self._head(), full=img if getattr(self.be, "ahead", None) else None)
         prev, self._pending = self._pending, (slot, img, meta, t0)
         return self._finish(prev) if prev is not None else None
 
@@ -545,7 +597,7 @@ class GatePerception:
     def __call__(self, frame):
         P = self.P; t0 = time.perf_counter(); self._cur_slot = 0; img = self._prep(frame, 0); h, w = img.shape[-2:]
         x = F.interpolate(img, size=(self.S, self.S), mode="bilinear", align_corners=False); t1 = time.perf_counter()
-        o = self.be.system(x, self._head()) if self.backend == "trt" else self.be.system(x); self._route(o); self._select(o); t2 = time.perf_counter()
+        o = self.be.system(x, self._head(), full=img if getattr(self.be, "ahead", None) else None) if self.backend == "trt" else self.be.system(x); self._route(o); self._select(o); t2 = time.perf_counter()
         if self.fast: return self._post_fast(o, img, h, w, t0, t1, t2)
         cpu = torch.device("cpu"); wh = torch.tensor([w, h], dtype=torch.float32)
         G = o["gates"][0].float().cpu(); N2 = o["ng_gates"][0].float().cpu()          # tiny (K,9) tensors: post-processing on the CPU avoids per-element GPU syncs
@@ -590,7 +642,7 @@ class GatePerception:
             d = torch.cat((torch.where(d[:, :1] >= hi, d[:, :1], d[:, :1].clamp(min=hi)), c.reshape(-1, 8)), 1)[keep]
         peaks = peaks_from(d) if P["confirm"] else torch.cat((pk, peaks_from(d)))
         t5 = time.perf_counter()
-        return dict(gates=d, peaks=peaks, seg=o["seg"][0].argmax(0).to(torch.uint8), depth=o["depth"][0, 0], pooled=o["pooled"][0], seg_in=(o["seg_in"][0].to(torch.uint8) if "seg_in" in o else None), seg_fine=(o["seg_fine"][0].to(torch.uint8) if "seg_fine" in o else None), head=o.get("head"), p_indoor=self.p_indoor,
+        return dict(gates=d, peaks=peaks, seg=self._seg11(o), depth=o["depth"][0, 0], pooled=o["pooled"][0], seg_in=(o["seg_in"][0].to(torch.uint8) if "seg_in" in o else None), seg_fine=(o["seg_fine"][0].to(torch.uint8) if "seg_fine" in o else None), head=o.get("head"), p_indoor=self.p_indoor,
                     ms=dict(prep=1e3 * (t1 - t0), engine=1e3 * (t2 - t1), heads_post=1e3 * (t3 - t2), refiner=1e3 * (t4 - t3), confirm=1e3 * (t5 - t4), total=1e3 * (t5 - t0)))
 
     def _post_fast(self, o, img, h, w, t0, t1, t2):
@@ -639,5 +691,5 @@ class GatePerception:
             d = np.concatenate((np.maximum(d[:, :1], hi), c.reshape(-1, 8)), 1)[keep].astype(np.float32)
         peaks = peaks_from_np(d) if P["confirm"] else np.concatenate((pk, peaks_from_np(d)))
         t5 = time.perf_counter()
-        return dict(gates=torch.from_numpy(d), peaks=torch.from_numpy(np.ascontiguousarray(peaks, dtype=np.float32)), seg=o["seg"][0].argmax(0).to(torch.uint8), depth=o["depth"][0, 0], pooled=o["pooled"][0], seg_in=(o["seg_in"][0].to(torch.uint8) if "seg_in" in o else None), seg_fine=(o["seg_fine"][0].to(torch.uint8) if "seg_fine" in o else None), head=o.get("head"), p_indoor=self.p_indoor,
+        return dict(gates=torch.from_numpy(d), peaks=torch.from_numpy(np.ascontiguousarray(peaks, dtype=np.float32)), seg=self._seg11(o), depth=o["depth"][0, 0], pooled=o["pooled"][0], seg_in=(o["seg_in"][0].to(torch.uint8) if "seg_in" in o else None), seg_fine=(o["seg_fine"][0].to(torch.uint8) if "seg_fine" in o else None), head=o.get("head"), p_indoor=self.p_indoor,
                     ms=dict(prep=1e3 * (t1 - t0), engine=1e3 * (t2 - t1), heads_post=1e3 * (t3 - t2), refiner=1e3 * (t4 - t3), confirm=1e3 * (t5 - t4), total=1e3 * (t5 - t0)))

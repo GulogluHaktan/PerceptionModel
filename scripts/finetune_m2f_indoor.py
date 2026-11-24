@@ -102,24 +102,129 @@ def evaluate(m, pairs, side=800):
     return dict(miou=round(float(iu[pres].mean()), 4), per_class={IN_CLASSES[i]: round(float(iu[i]), 3) for i in range(K_IN) if pres[i]})
 
 
+# ---- Update 167: camera-style fine-tune for the IMX219 wide raw camera (CAMWIDE=1) ----
+P_MIX = float(os.environ.get("P_MIX", "0")); P_MIC = float(os.environ.get("P_MIC", "0")); MIC_RATIO = float(os.environ.get("MIC_RATIO", "0.5"))
+CAMWIDE = os.environ.get("CAMWIDE") == "1"; WH = tuple(int(v) for v in os.environ.get("CAMWH", "288,768").split(",")); AR = 1640 / 616; CAMEVAL = [True]
+
+
+def cam_aug(x):
+    """x (3,H,W) 0..1 -> what our raw camera + GPU ISP produce: exposure / gain changes with noise that grows in the dark, washed-out colour,
+    the residual even/odd row comb of x2 binning (odd rows shifted then [1,2,1] vertically), slight blur."""
+    if random.random() < 0.8:
+        g = random.uniform(0.35, 1.3); x = (x.clamp(1e-4, 1) ** 2.2 * g).clamp(0, 1) ** (1 / 2.2)
+        sig = random.uniform(0.005, 0.04) * (1.5 if g < 0.6 else 1.0); x = (x + torch.randn_like(x) * sig + torch.randn_like(x[:1]) * sig).clamp(0, 1)
+    if random.random() < 0.6: y = x.mean(0, keepdim=True); x = y + (x - y) * random.uniform(0.55, 1.0)
+    if random.random() < 0.6:
+        s_ = random.choice((1, 2, 3)); x = x.clone(); x[:, 1::2, s_:] = x[:, 1::2, :-s_].clone()
+        x = torch.cat((x[:, :1], 0.25 * x[:, :-2] + 0.5 * x[:, 1:-1] + 0.25 * x[:, 2:], x[:, -1:]), 1)
+    if random.random() < 0.3: x = F.avg_pool2d(x[None], 3, 1, 1, count_include_pad=False)[0]
+    return x.clamp(0, 1)
+
+
+def wide_pair(p, lp, aug, with_soft):
+    """2.66:1 crop (random scale / position when training, centre otherwise) -> 384x1024, labels too; teacher soft labels on the same crop."""
+    im = Image.open(p).convert("RGB"); lab = Image.open(lp); W, H = im.size
+    cw = W * (random.uniform(0.7, 1.0) if aug else 1.0); ch = cw / AR
+    if ch > H: ch = H * (random.uniform(0.8, 1.0) if aug else 1.0); cw = ch * AR
+    x0 = random.uniform(0, W - cw) if aug else (W - cw) / 2; y0 = random.uniform(0, H - ch) if aug else (H - ch) / 2
+    box = (int(x0), int(y0), int(x0 + cw), int(y0 + ch)); im = im.crop(box); lab = lab.crop(box); flip = aug and random.random() < 0.5
+    if flip: im = im.transpose(Image.FLIP_LEFT_RIGHT); lab = lab.transpose(Image.FLIP_LEFT_RIGHT)
+    x = torch.from_numpy(np.asarray(im.resize(WH[::-1], Image.BICUBIC)).copy()).permute(2, 0, 1).float() / 255
+    is_cam = "/images/cam/" in str(p)
+    if aug: x = cam_aug(x)
+    if aug and is_cam and random.random() < P_MIC:        # MIC-style masked consistency: random 32 px patches blacked out, labels unchanged
+        ph, pw = WH[0] // 32, WH[1] // 32; keep = (torch.rand(1, ph, pw) > MIC_RATIO).float()
+        x = x * F.interpolate(keep[None], size=WH, mode="nearest")[0]
+    y = torch.from_numpy(np.asarray(lab.resize(WH[::-1], Image.NEAREST)).astype(np.int64).copy()); y[(y >= K_IN) & (y != 255)] = 255
+    if not with_soft: return x, y
+    sp = (Path("data/general/train") / f"soft_cam_{'out' if os.environ.get('CLASSSET') == 'out' else 'in'}" if is_cam else B.SOFT) / f"{Path(lp).stem}.npy"
+    if not sp.exists(): return x, y, torch.zeros(K_IN, 112, 112), 0.0
+    t = torch.from_numpy(np.load(sp)).float()[None] / 255
+    gx = torch.linspace(box[0] / W, box[2] / W, 112) * 2 - 1; gy = torch.linspace(box[1] / H, box[3] / H, 112) * 2 - 1
+    if flip: gx = gx.flip(0)
+    t = F.grid_sample(t, torch.stack(torch.meshgrid(gy, gx, indexing="ij")[::-1], -1)[None], mode="bilinear", align_corners=True)[0]
+    return x, y, t / t.sum(0, keepdim=True).clamp(min=1e-6), 1.0
+
+
+def evaluate_wide(m, pairs):
+    """wide 2.66:1 crops at WH; CAMEVAL[0]: camera-degraded with a fixed seed per image (same degradation for every model)"""
+    m.eval(); cm = np.zeros((K_IN, K_IN), np.int64); st = random.getstate()
+    with torch.no_grad():
+        for i, (p, lp) in enumerate(pairs):
+            x, y = wide_pair(p, lp, False, False)
+            if CAMEVAL[0]: random.seed(1000 + i); torch.manual_seed(1000 + i); x = cam_aug(x)
+            pr = F.interpolate(predict(m, ((x - MEAN) / STD)[None].to(dev)), size=y.shape, mode="bilinear", align_corners=False)[0].argmax(0).cpu().numpy()
+            y = y.numpy(); v = (y != 255) & (y < K_IN); cm += np.bincount(y[v] * K_IN + pr[v], minlength=K_IN * K_IN).reshape(K_IN, K_IN)
+    random.setstate(st); m.train(); iu = np.diag(cm) / np.maximum(1, cm.sum(0) + cm.sum(1) - np.diag(cm)); pres = cm.sum(1) > 0
+    return dict(miou=round(float(iu[pres].mean()), 4), per_class={IN_CLASSES[i]: round(float(iu[i]), 3) for i in range(K_IN) if pres[i]})
+
+
+# own-camera frames labelled by the Swin-L teacher (scripts/camera_pseudo_labels.py): P_CAM of each batch, held-out split for selection
+P_CAM = float(os.environ.get("P_CAM", "0")); CAMP = {"train": [], "val": []}
+if P_CAM > 0:
+    _sp = json.loads(Path("data/general/train/cam_split_%s.json" % ("out" if os.environ.get("CLASSSET") == "out" else "in")).read_text()); _ld = Path("data/general/train") / ("labels_cam_out" if os.environ.get("CLASSSET") == "out" else "labels_cam_in")
+    CAMP = {k: [(Path("data/general/train/images/cam") / f"{n}.jpg", _ld / f"{n}.png") for n in v] for k, v in _sp.items()}
+    # rare-class oversampling: frame weight = sum over its classes (>= 0.5 % of its pixels) of (1 / class pixel share) ** 0.5
+    _h = []
+    for _, lp in CAMP["train"]:
+        a = np.asarray(Image.open(lp)).ravel(); a = a[a < 255]; _h.append(np.bincount(a, minlength=40)[:40] / max(1, a.size))
+    _h = np.array(_h); _share = _h.mean(0) + 1e-4
+    CAMW = np.array([((r >= 0.005) * (1 / _share) ** 0.5).sum() for r in _h]); CAMW = CAMW / CAMW.sum()
+    print("camera frames", len(CAMP["train"]), "weight max/mean %.1f" % (CAMW.max() * len(CAMW)), flush=True)
+
+
+def evaluate_cam(m):
+    """agreement with the teacher on held-out camera frames (no synthetic degradation: these ARE camera frames)"""
+    c = CAMEVAL[0]; CAMEVAL[0] = False; r = evaluate_wide(m, CAMP["val"]); CAMEVAL[0] = c; return r
+
+
+if CAMWIDE: evaluate = lambda m, pairs, side=800: evaluate_wide(m, pairs)      # noqa: E731  (val selection and test on wide crops at 384x1024)
+
+
 def main():
-    m = build().to(dev); real, ps = B.pool() if B.CLASSSET == "out" else pool(); random.seed(0); random.shuffle(real); random.shuffle(ps)
+    m = build().to(dev)
+    if os.environ.get("INIT"): m.load_state_dict(torch.load(os.environ["INIT"], map_location="cpu")); print("init from", os.environ["INIT"], flush=True)
+    real, ps = B.pool() if B.CLASSSET == "out" else pool(); random.seed(0); random.shuffle(real); random.shuffle(ps)
     val = real[:300]; real = real[300:]
     test = [(p, Path(f"data/general/{B.TESTDIR}/seg") / (p.stem + ".png")) for p in sorted(Path(f"data/general/{B.TESTDIR}/images").glob("*.jpg"))]
     print(f"train real {len(real)} pseudo {len(ps)} val {len(val)} test {len(test)}", flush=True)
     ev0 = evaluate(m, test[:400]); vz = evaluate(m, val); print("zero-shot (22-class head init) test400", ev0["miou"], "val", vz["miou"], flush=True)
+    if CAMWIDE: CAMEVAL[0] = False; print("start model on CLEAN wide test400", evaluate(m, test[:400])["miou"], flush=True); CAMEVAL[0] = True
+    if CAMP["val"]: cv0 = evaluate_cam(m)["miou"]; print("start model camera-val teacher agreement", cv0, flush=True); vz["miou"] = 0.5 * (vz["miou"] + cv0)
     bb = [p for n, p in m.named_parameters() if "encoder" in n and "pixel_level_module" in n]; rest = [p for n, p in m.named_parameters() if not ("encoder" in n and "pixel_level_module" in n)]
     opt = torch.optim.AdamW([dict(params=bb, lr=LR * 0.1), dict(params=rest, lr=LR)], weight_decay=0.05)
     sch = torch.optim.lr_scheduler.LambdaLR(opt, lambda it: min(1.0, it / 500) * 0.5 * (1 + math.cos(math.pi * min(it, ITERS) / ITERS)))
     log = open(OUT / "log.jsonl", "a"); t0 = time.time(); best = (vz["miou"], 0); save(m, OUT / "best"); ri = pi = 0; m.train()
     for it in range(1, ITERS + 1):
-        xs, ml, cl, ts, hs = [], [], [], [], []
+        xs, ml, cl, ts, hs = [], [], [], [], []; items = []
         for _ in range(BS):
-            pr = ps[pi % len(ps)] if (ps and random.random() < P_PSEUDO) else real[ri % len(real)]
-            if pr in ps: pi += 1
-            else: ri += 1
-            if KD > 0: x01, y, t, h = B.load_pair(*pr, True, True)                  # 448 crop + teacher probs with the same crop / flip
+            if CAMP["train"] and random.random() < P_CAM: pr = CAMP["train"][np.random.choice(len(CAMW), p=CAMW)]
+            else:
+                pr = ps[pi % len(ps)] if (ps and random.random() < P_PSEUDO) else real[ri % len(real)]
+                if pr in ps: pi += 1
+                else: ri += 1
+            if CAMWIDE:
+                if KD > 0: x01, y, t, h = wide_pair(*pr, True, True)
+                else: (x01, y), t, h = wide_pair(*pr, True, False), None, 0.0
+            elif KD > 0: x01, y, t, h = B.load_pair(*pr, True, True)                  # 448 crop + teacher probs with the same crop / flip
             else: (x01, y), t, h = B.load_pair(*pr, True, False), None, 0.0
+            items.append([x01, y, t, h, "/images/cam/" in str(pr[0])])
+        # ClassMix (DAFormer): paste half of a SOURCE image's classes (pixels + labels + teacher probs) onto a CAMERA frame
+        src_ix = [j for j, it_ in enumerate(items) if not it_[4]]
+        for it_ in items:
+            if not (it_[4] and src_ix and random.random() < P_MIX): continue
+            sj = items[random.choice(src_ix)]; cls_ = [c_ for c_ in sj[1].unique().tolist() if c_ != 255]
+            if not cls_: continue
+            pick = torch.tensor(random.sample(cls_, max(1, len(cls_) // 2))); M = torch.isin(sj[1], pick)
+            it_[0] = torch.where(M[None], sj[0], it_[0]); it_[1] = torch.where(M, sj[1], it_[1])
+            if it_[2] is not None and it_[3] > 0:
+                M112 = F.interpolate(M[None, None].float(), size=it_[2].shape[-2:], mode="nearest")[0] > 0.5
+                if sj[3] > 0: src_t = sj[2]
+                else:
+                    yy = F.interpolate(sj[1][None, None].float(), size=it_[2].shape[-2:], mode="nearest")[0, 0].long()
+                    src_t = F.one_hot(yy.clamp(max=K_IN - 1), K_IN).permute(2, 0, 1).float()
+                it_[2] = torch.where(M112, src_t, it_[2])
+        for x01, y, t, h, _c in items:
             mk, c = targets(y); xs.append((x01 - MEAN) / STD); ml.append(mk.to(dev)); cl.append(c.to(dev)); ts.append(t); hs.append(h)
         with torch.autocast("cuda", torch.bfloat16): out = m(pixel_values=torch.stack(xs).to(dev), mask_labels=ml, class_labels=cl)
         loss = out.loss
@@ -132,9 +237,13 @@ def main():
         if it % 100 == 0:
             r = dict(it=it, loss=round(float(loss), 4), min=round((time.time() - t0) / 60, 1)); print(json.dumps(r), flush=True); log.write(json.dumps(r) + "\n"); log.flush()
         if it % 2500 == 0 or it == ITERS:
-            ev = evaluate(m, val); r = dict(it=it, val=ev["miou"]); print("VAL", json.dumps(r), flush=True); log.write(json.dumps(r) + "\n"); log.flush()
+            ev = evaluate(m, val); r = dict(it=it, val=ev["miou"])
+            if CAMP["val"]: cv = evaluate_cam(m)["miou"]; r["cam_val"] = cv; ev["miou"] = 0.5 * (ev["miou"] + cv)
+            print("VAL", json.dumps(r), flush=True); log.write(json.dumps(r) + "\n"); log.flush()
             if ev["miou"] > best[0]: best = (ev["miou"], it); save(m, OUT / "best")
     m = load_best(OUT / "best").to(dev); te = evaluate(m, test)
+    if CAMWIDE: CAMEVAL[0] = False; te["clean_wide"] = evaluate(m, test)["miou"]; CAMEVAL[0] = True
+    if CAMP["val"]: te["cam_val"] = evaluate_cam(m)["miou"]
     if B.CLASSSET == "out":
         dk = [(p, Path("data/general/eval_dark_out/seg") / (p.stem + ".png")) for p in sorted(Path("data/general/eval_dark_out/images").glob("*.jpg"))]
         te["real_dark"] = evaluate(m, dk)["miou"]
