@@ -4,7 +4,10 @@
 # Writes ~/car/<name>/ : frames.raw (+stamps, meta: every camera frame, 84 fps, ~170 MB/s), rec/ (model outputs every 20th frame:
 # image, 11-class seg, indoor/outdoor map, depth, detections.jsonl), log.txt. Stop early with Ctrl+C (once).
 # Afterwards: python raw_record.py conv ~/car/<name> --every 4 --mp4 --calib camera_imx219_cam1_1640x616.json --hfov 100
-NAME=${1:-run_$(date +%H%M%S)}; SECS=${2:-600}; ROT=${3:-0}; SCENE=${4:-outdoor}; OUT=/home/haktan/car/$NAME      # ROT: 0 / 90 / 180 / 270 (camera mounted rotated, clockwise)
+NAME=${1:-run_$(date +%H%M%S)}; SECS=${2:-600}; ROT=${3:-0}; SCENE=${4:-outdoor}; OUT=/home/haktan/car/$NAME
+if sudo test -e "$OUT"; then NAME=${NAME}_$(date +%H%M%S); OUT=/home/haktan/car/$NAME; echo "name already used: recording to $OUT instead (the old recording is kept)"; fi
+FREE=$(df --output=avail -BG /home | tail -1 | tr -dc 0-9); NEED=$((SECS * 17 / 100 + 5))
+if [ "$FREE" -lt "$NEED" ]; then echo "only ${FREE} GB free, ${SECS} s of raw 84 fps needs ~${NEED} GB: free space or record shorter"; exit 1; fi      # ROT: 0 / 90 / 180 / 270 (camera mounted rotated, clockwise)
 sudo systemctl stop nvargus-daemon 2>/dev/null
 sudo jetson_clocks 2>/dev/null       # lock CPU/GPU/EMC clocks at max (reset by reboot)
 sudo -u haktan -H bash -c "mkdir -p $OUT && cd ~/pfm_drone384 && timeout -s INT $SECS /home/haktan/PerceptionModel/.venv/bin/python run.py --bundle bundle --source raw:7 --backend trt \
