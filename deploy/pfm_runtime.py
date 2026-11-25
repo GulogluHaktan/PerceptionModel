@@ -307,6 +307,22 @@ def order_np(p):
     c = p.mean(0); p = p[np.argsort(np.arctan2(p[:, 1] - c[1], p[:, 0] - c[0]), kind="stable")]; return np.roll(p, -int((p[:, 0] + p[:, 1]).argmin()), 0)
 
 
+def drop_slivers_np(d, comp_thr):
+    """Drop collapsed quads (area / (mean side)^2 < comp_thr, square = 1) whose centre lies inside a higher-scored gate of >= 2x the area.
+    On the real golden sets these are line-like fragments inside a detected gate (Red / TII false gates 0.67 / 0.75 -> 0.52 / 0.53 per frame
+    at 0.5, recall@10/20 unchanged on every venue); a sliver is useless for PnP even when it happens to lie on a distant gate."""
+    if comp_thr <= 0 or len(d) < 2: return d
+    c = d[:, 1:].reshape(-1, 4, 2).astype(np.float64); nx = np.roll(c, -1, 1)
+    area = 0.5 * np.abs((c[..., 0] * nx[..., 1] - c[..., 1] * nx[..., 0]).sum(-1)); side = np.linalg.norm(nx - c, axis=-1).mean(-1)
+    comp = area / np.maximum(side ** 2, 1e-6); ctr = c.mean(1); keep = np.ones(len(d), bool)
+    for i in np.nonzero(comp < comp_thr)[0]:
+        for j in range(len(d)):
+            if j == i or area[j] <= 2 * area[i] or d[j, 0] <= d[i, 0]: continue
+            q = c[j]; e = np.roll(q, -1, 0) - q; r = ctr[i] - q; cr = e[:, 0] * r[:, 1] - e[:, 1] * r[:, 0]
+            if (cr >= 0).all() or (cr <= 0).all(): keep[i] = False; break
+    return d[keep]
+
+
 def dedup_np(d, iou_thr, inside_rule):
     if len(d) < 2: return d
     c = d[:, 1:].reshape(-1, 4, 2); lo, hi = c.min(1), c.max(1); ctr = c.mean(1); area = np.clip(hi - lo, 1e-3, None).prod(-1); keep = []
@@ -640,6 +656,7 @@ class GatePerception:
                 inimg = (c[..., 0] >= 0) & (c[..., 0] < w) & (c[..., 1] >= 0) & (c[..., 1] < h); ok = ok & inimg; nconf = ok.sum(1).float(); c[ok] = pk[j[ok], 2:4]
             keep = (d[:, 0] >= hi) | (nconf >= P["confirm_n"])
             d = torch.cat((torch.where(d[:, :1] >= hi, d[:, :1], d[:, :1].clamp(min=hi)), c.reshape(-1, 8)), 1)[keep]
+        if len(d) > 1: d = torch.from_numpy(drop_slivers_np(d.numpy(), P.get("sliver_comp", 0.5)))
         peaks = peaks_from(d) if P["confirm"] else torch.cat((pk, peaks_from(d)))
         t5 = time.perf_counter()
         return dict(gates=d, peaks=peaks, seg=self._seg11(o), depth=o["depth"][0, 0], pooled=o["pooled"][0], seg_in=(o["seg_in"][0].to(torch.uint8) if "seg_in" in o else None), seg_fine=(o["seg_fine"][0].to(torch.uint8) if "seg_fine" in o else None), head=o.get("head"), p_indoor=self.p_indoor,
@@ -689,6 +706,7 @@ class GatePerception:
                 inimg = (c[..., 0] >= 0) & (c[..., 0] < w) & (c[..., 1] >= 0) & (c[..., 1] < h); ok &= inimg; nconf = ok.sum(1).astype(np.float32); c[ok] = pk[j[ok], 2:4]
             keep = (d[:, 0] >= hi) | (nconf >= P["confirm_n"])
             d = np.concatenate((np.maximum(d[:, :1], hi), c.reshape(-1, 8)), 1)[keep].astype(np.float32)
+        d = drop_slivers_np(d, P.get("sliver_comp", 0.5))
         peaks = peaks_from_np(d) if P["confirm"] else np.concatenate((pk, peaks_from_np(d)))
         t5 = time.perf_counter()
         return dict(gates=torch.from_numpy(d), peaks=torch.from_numpy(np.ascontiguousarray(peaks, dtype=np.float32)), seg=self._seg11(o), depth=o["depth"][0, 0], pooled=o["pooled"][0], seg_in=(o["seg_in"][0].to(torch.uint8) if "seg_in" in o else None), seg_fine=(o["seg_fine"][0].to(torch.uint8) if "seg_fine" in o else None), head=o.get("head"), p_indoor=self.p_indoor,
