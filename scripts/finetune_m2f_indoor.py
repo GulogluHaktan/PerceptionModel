@@ -188,6 +188,7 @@ def main():
     if os.environ.get("INIT"): m.load_state_dict(torch.load(os.environ["INIT"], map_location="cpu")); print("init from", os.environ["INIT"], flush=True)
     real, ps = B.pool() if B.CLASSSET == "out" else pool(); random.seed(0); random.shuffle(real); random.shuffle(ps)
     val = real[:300]; real = real[300:]
+    if os.environ.get("RFS") == "1": real = B.repeat_factor(real)      # LVIS repeat-factor sampling over the human-labelled pool (rare classes: person far away, fence, bicycle, floor ...)
     test = [(p, Path(f"data/general/{B.TESTDIR}/seg") / (p.stem + ".png")) for p in sorted(Path(f"data/general/{B.TESTDIR}/images").glob("*.jpg"))]
     print(f"train real {len(real)} pseudo {len(ps)} val {len(val)} test {len(test)}", flush=True)
     ev0 = evaluate(m, test[:400]); vz = evaluate(m, val); print("zero-shot (22-class head init) test400", ev0["miou"], "val", vz["miou"], flush=True)

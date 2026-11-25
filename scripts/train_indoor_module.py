@@ -220,7 +220,7 @@ def pool():
     L = Path("data/general/train"); real, ps = [], []
     for lp in sorted((L / LABDIR / "seg").glob("*.png")):
         src, sid = lp.stem.split("__", 1); ip = L / "images" / src / f"{sid}.jpg"
-        if ip.exists(): (real if src in ("coco", "cocot", "bdd") else ps).append((ip, lp))
+        if ip.exists(): (real if src in ("coco", "cocot", "bdd", "cityscapes") else ps).append((ip, lp))      # cityscapes = TRAIN split only (val is the eval set)
     return real, ps
 
 
