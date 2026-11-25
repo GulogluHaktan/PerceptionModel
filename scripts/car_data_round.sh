@@ -7,7 +7,7 @@
 set -e
 cd "$(dirname "$0")/.."
 KEY=~/.ssh/id_ed25519_orin; ORIN=lovelace@10.9.25.123; RAW=${RAW:-data/general/camraw}; STEP=${STEP:-6}
-INIT=${INIT:-runs/modules/m2f_out_cam4/best_7500/model.pt}; OUT=${OUT:-runs/modules/m2f_out_car_$(date +%m%d_%H%M)}
+INIT=${INIT:-runs/modules/m2f_out_cam9/best/model.pt}; OUT=${OUT:-runs/modules/m2f_out_car_$(date +%m%d_%H%M)}
 mkdir -p "$RAW"
 scp -q -i $KEY scripts/orin_sub_raw.py $ORIN:/tmp/sub_raw.py
 for n in "$@"; do
