@@ -17,10 +17,15 @@ from cpu_isp import CpuISP
 isp = CpuISP()
 
 
-def preview(fr):
-    """~3 fps CPU preview, written atomically for rec_view.py."""
+JPG = os.path.join(a.out, "jpg"); os.makedirs(JPG, exist_ok=True); npv = [0]
+
+
+def preview(fr, fid):
+    """~3 fps CPU preview, written atomically for rec_view.py; every 3rd one (~1 per second) also kept as <out>/jpg/<frame id>.jpg."""
     import cv2
-    cv2.imwrite(PREVIEW + ".tmp.jpg", isp(fr), [cv2.IMWRITE_JPEG_QUALITY, 80]); os.replace(PREVIEW + ".tmp.jpg", PREVIEW)
+    img = isp(fr); cv2.imwrite(PREVIEW + ".tmp.jpg", img, [cv2.IMWRITE_JPEG_QUALITY, 80]); os.replace(PREVIEW + ".tmp.jpg", PREVIEW)
+    if npv[0] % 3 == 0: cv2.imwrite(os.path.join(JPG, f"{fid:07d}.jpg"), img, [cv2.IMWRITE_JPEG_QUALITY, 85])
+    npv[0] += 1
 
 
 cam = RawCamera(mode=a.mode, exposure_us=exp_us, gain=gain, dump=a.out)
@@ -37,7 +42,7 @@ try:
                 want = exp_us * gain * min(4.0, max(0.25, 0.18 / max(lin, 1e-4)))
                 exp_us = min(a.exp_max, max(50.0, want / 16.0)); gain = min(170.0, max(16.0, want / exp_us)); cam.set_exposure(exp_us, gain)
         if n % 28 == 1:
-            try: preview(fr)
+            try: preview(fr, cam.ndump)
             except Exception as e: print("preview failed:", e, flush=True)
         if time.time() - tl > 5:
             el = time.time() - t0; print(f"{el:5.0f} s | saved {cam.ndump} frames ({cam.ndump / el:.1f} fps) | sensor drops {cam.dropped} | exp {exp_us:.0f} us gain {gain:.0f}", flush=True); tl = time.time()
