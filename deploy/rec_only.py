@@ -12,23 +12,17 @@ ap.add_argument("--exp-max", type=float, default=8000)
 a = ap.parse_args()
 stop = [False]; signal.signal(signal.SIGINT, lambda *_: stop.__setitem__(0, True)); signal.signal(signal.SIGTERM, lambda *_: stop.__setitem__(0, True))
 exp_us, gain = min(4000.0, a.exp_max), 32.0
-PREVIEW = "/tmp/pfm_preview.jpg"; wb = np.ones(3, np.float32)
+PREVIEW = os.path.expanduser("~/.cache/pfm_preview.jpg"); os.makedirs(os.path.dirname(PREVIEW), exist_ok=True)
+from cpu_isp import CpuISP
+isp = CpuISP()
 
 
 def preview(fr):
-    """Small RGB preview on the CPU (~3 fps): undo the row-class shift 8*(y%4) px of the wide x2-binned modes, OpenCV demosaic, grey-world WB,
-    gain to 18 % grey, gamma; written atomically for rec_view.py."""
-    global wb
+    """~3 fps CPU preview, written atomically for rec_view.py."""
     import cv2
-    x = fr.copy()
-    for c in (1, 2, 3):
-        d = 8 * c; x[c::4, d:] = fr[c::4, :-d]; x[c::4, :d] = fr[c::4, d:d + 1]
-    rgb = cv2.cvtColor(x, cv2.COLOR_BayerBG2RGB)            # RGGB sensor -> OpenCV's BG naming
-    rgb = cv2.resize(rgb, (rgb.shape[1] // 2, rgb.shape[0] // 2), interpolation=cv2.INTER_AREA).astype(np.float32)
-    rgb = np.clip((rgb - 4096) / (65535 - 4096), 0, None); m = rgb.reshape(-1, 3).mean(0) + 1e-6
-    wb = 0.8 * wb + 0.2 * np.clip(m[1] / m, 0.4, 3.0); rgb *= wb; rgb *= 0.18 / max(float(rgb.mean()), 1e-4)
-    out = (np.clip(rgb, 0, 1) ** (1 / 2.2) * 255).astype(np.uint8)
-    cv2.imwrite(PREVIEW + ".tmp.jpg", cv2.cvtColor(out, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 80]); os.replace(PREVIEW + ".tmp.jpg", PREVIEW)
+    cv2.imwrite(PREVIEW + ".tmp.jpg", isp(fr), [cv2.IMWRITE_JPEG_QUALITY, 80]); os.replace(PREVIEW + ".tmp.jpg", PREVIEW)
+
+
 cam = RawCamera(mode=a.mode, exposure_us=exp_us, gain=gain, dump=a.out)
 last, n, t0, tl = 0, 0, time.time(), time.time()
 print(f"recording {cam.w}x{cam.h} @ {cam.fps} fps -> {a.out} (no perception)", flush=True)

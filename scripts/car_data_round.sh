@@ -1,17 +1,17 @@
 #!/bin/bash
 # One round of own-camera self-training after a recording session (Update 167).
-#   bash scripts/car_data_round.sh araba1 araba2 ...      (recording names under /home/haktan/car/ on the Orin)
+#   bash scripts/car_data_round.sh araba1 araba2 ...      (recording names under /home/lovelace/car/ on the Orin; CAR=/home/haktan/car for old car_test.sh runs)
 # 1 Orin: every 6th raw frame of each recording -> .npy   2 copy to the 5090   3 ISP + Swin-L teacher labels (hard + soft), appended to
 # the existing camera set   4 outdoor / indoor split (blocked val)   5 outdoor fine-tune from the current best module (soft KD, rare-class
 # sampling, ClassMix, MIC). Afterwards: compare with scripts/cmp + export_m2f_indoor.py + trtexec on the Orin (see docs/handoff).
 set -e
 cd "$(dirname "$0")/.."
-KEY=~/.ssh/id_ed25519_orin; ORIN=lovelace@10.9.25.123; RAW=${RAW:-data/general/camraw}; STEP=${STEP:-6}
+KEY=~/.ssh/id_ed25519_orin; ORIN=lovelace@10.9.25.123; CAR=${CAR:-/home/lovelace/car}; RAW=${RAW:-data/general/camraw}; STEP=${STEP:-6}
 INIT=${INIT:-runs/modules/m2f_out_cam9/best/model.pt}; OUT=${OUT:-runs/modules/m2f_out_car_$(date +%m%d_%H%M)}
 mkdir -p "$RAW"
 scp -q -i $KEY scripts/orin_sub_raw.py $ORIN:/tmp/sub_raw.py
 for n in "$@"; do
-  ssh -i $KEY $ORIN "mkdir -p /tmp/sub && sudo -n python3 /tmp/sub_raw.py /home/haktan/car/$n /tmp/sub/$n.npy $STEP && sudo -n chmod 644 /tmp/sub/$n.npy"
+  ssh -i $KEY $ORIN "mkdir -p /tmp/sub && sudo -n python3 /tmp/sub_raw.py $CAR/$n /tmp/sub/$n.npy $STEP && sudo -n chmod 644 /tmp/sub/$n.npy"
   scp -q -i $KEY $ORIN:/tmp/sub/$n.npy "$RAW/"
 done
 env -u PYTHONPATH .venv/bin/python scripts/camera_pseudo_labels.py "$RAW"

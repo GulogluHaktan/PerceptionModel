@@ -1,9 +1,9 @@
 """Live preview window for rec_only.py (run on the Orin desktop / RDP session):  python3 ~/rec_view.py
-Shows /tmp/pfm_preview.jpg (~3 fps) and the last status line of ~/rec_last.log; a red banner when no fresh frame arrives (recording stopped)."""
+Shows ~/.cache/pfm_preview.jpg (~3 fps) and the last status line of ~/rec_last.log; a red banner when no fresh frame arrives (recording stopped)."""
 import os, time, tkinter as tk
 from pathlib import Path
 from PIL import Image, ImageTk
-P = Path("/tmp/pfm_preview.jpg"); LOG = Path.home() / "rec_last.log"
+P = Path.home() / ".cache/pfm_preview.jpg"; LOG = Path.home() / "rec_last.log"
 root = tk.Tk(); root.title("PFM kayit onizleme"); root.geometry("1240x560"); root.configure(bg="black")
 status = tk.Label(root, font=("DejaVu Sans Mono", 13), fg="white", bg="#202020", anchor="w"); status.pack(fill="x")
 pic = tk.Label(root, bg="black"); pic.pack(fill="both", expand=True); last = [0.0]
